@@ -1,0 +1,52 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Asset preview</title>
+<style>
+ body{background:#E3EEF7;font-family:system-ui;padding:24px;color:#10202F}
+ h2{font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:#6B7F92;margin:26px 0 10px}
+ p.hint{font-size:12px;color:#6B7F92;margin:-4px 0 12px;max-width:70ch;line-height:1.6}
+ .row{display:flex;flex-wrap:wrap;gap:14px}
+ .c{border-radius:10px;padding:8px;text-align:center;box-shadow:0 10px 30px -12px rgba(16,32,47,.18)}
+ .c img{height:210px;display:block}
+ .c span{font-size:10px;color:#6B7F92;display:block;margin-top:6px}
+ /* checkerboard proves real alpha; a PNG with the pattern painted in
+    would look identical here, which is why the dark and scene strips follow */
+ .alpha{background:repeating-conic-gradient(#fff 0 25%,#dbe6f0 0 50%) 0 0/18px 18px}
+ .dark{background:#10202F}
+ .dark span{color:#8FA1B3}
+ .scene{position:relative;overflow:hidden;border-radius:12px;height:300px;
+        box-shadow:0 10px 30px -12px rgba(16,32,47,.18)}
+ .scene img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+ .scene .figs{position:absolute;inset:0;display:flex;align-items:flex-end;
+              justify-content:space-around;padding:0 10px}
+ .scene .figs img{height:270px;filter:drop-shadow(0 18px 34px rgba(16,32,47,.22))}
+ .bgrow img{width:340px;height:auto;border-radius:8px;display:block}
+</style></head><body>
+
+<h2>Characters on checkerboard</h2>
+<div class="row" id="ch"></div>
+
+<h2>Characters on dark — any pale halo or leftover fringe shows here</h2>
+<div class="row" id="chd"></div>
+
+<h2>Composited over a real background — this is how they are actually used</h2>
+<p class="hint">Look along every silhouette edge. A light outline, a rectangular
+patch, or a visible checker pattern means the cut-out failed for that figure.</p>
+<div class="scene" id="sc1"></div>
+<div style="height:14px"></div>
+<div class="scene" id="sc2"></div>
+
+<h2>Backgrounds — must contain no people</h2>
+<div class="row bgrow" id="bg"></div>
+
+<script>
+const CH=['elena-explain','elena-concern','marcus-neutral','marcus-alarm',
+          'cust-trader','cust-elder','cust-student','cust-pep','cust-ngo','cust-foreign'];
+const BG=['bg-skyline','bg-branch','bg-opsfloor','bg-boardroom','bg-hall'];
+const card=(n,cls)=>`<div class="c ${cls}"><img src="${n}.png" alt="${n}"><span>${n}</span></div>`;
+ch.innerHTML  = CH.map(n=>card(n,'alpha')).join('');
+chd.innerHTML = CH.map(n=>card(n,'dark')).join('');
+bg.innerHTML  = BG.map(n=>card(n,'')).join('');
+const scene=(bgName,names)=>`<img class="bg" src="${bgName}.png" alt="">
+  <div class="figs">${names.map(n=>`<img src="${n}.png" alt="${n}">`).join('')}</div>`;
+sc1.innerHTML = scene('bg-branch',  ['elena-explain','cust-trader','marcus-alarm','cust-elder']);
+sc2.innerHTML = scene('bg-boardroom',['cust-pep','elena-concern','cust-ngo','cust-foreign','cust-student']);
+</script></body></html>

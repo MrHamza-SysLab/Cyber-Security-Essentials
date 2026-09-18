@@ -7,8 +7,11 @@ import vendor from '../../../assets/games/hackers-target-board/asset-small-vendo
 import shield from '../../../assets/games/hackers-target-board/energy-shield.png'
 import hacker from '../../../assets/games/hackers-target-board/hacker-laptop-front.png'
 import splash from '../../../assets/games/hackers-target-board/splash.jpg'
+import { LangToggleGame } from '../../../components/LangToggle'
+import { useLanguage } from '../../../i18n/LanguageContext'
+import { HACKERS_TARGET_UR } from '../../../i18n/module1'
 
-const ASSETS = [
+const ASSETS_BASE = [
   {
     id: 'records',
     label: 'Employee Records',
@@ -50,14 +53,14 @@ const ARC = [
   { rotate: '14deg', y: '0.35rem', x: '0' },
 ]
 
-const SPLASH_LABELS = [
-  { text: 'Employee Records', className: 'left-[8%] top-[10%] sm:left-[11%] sm:top-[11%]', delay: '0ms' },
-  { text: 'Secret Strategy', className: 'left-[2%] top-[40%] sm:left-[4%] sm:top-[42%]', delay: '120ms' },
-  { text: 'Small Vendor Account', className: 'right-[10%] top-[10%] sm:right-[14%] sm:top-[11%]', delay: '240ms' },
-  { text: 'Customer Data', className: 'right-[3%] top-[38%] sm:right-[5%] sm:top-[40%]', delay: '360ms' },
+const SPLASH_LABELS_BASE = [
+  { id: 'records', text: 'Employee Records', className: 'left-[8%] top-[10%] sm:left-[11%] sm:top-[11%]', delay: '0ms' },
+  { id: 'strategy', text: 'Secret Strategy', className: 'left-[2%] top-[40%] sm:left-[4%] sm:top-[42%]', delay: '120ms' },
+  { id: 'vendor', text: 'Small Vendor Account', className: 'right-[10%] top-[10%] sm:right-[14%] sm:top-[11%]', delay: '240ms' },
+  { id: 'payments', text: 'Customer Data', className: 'right-[3%] top-[38%] sm:right-[5%] sm:top-[40%]', delay: '360ms' },
 ]
 
-const TYPE_LINES = [
+const TYPE_LINES_EN = [
   'Hacker sab se pehle kis par nazar rakhega?',
   'Spot the prime target!',
 ]
@@ -72,7 +75,7 @@ function useTypewriter(lines, { start = true, charMs = 38, linePauseMs = 420 } =
     setLineIndex(0)
     setCharIndex(0)
     setDone(false)
-  }, [start])
+  }, [start, lines])
 
   useEffect(() => {
     if (!start || done) return undefined
@@ -154,6 +157,9 @@ function HoloStat({ label, value }) {
 }
 
 function TargetBoardResultScreen({ score, wrongCount, target, timer, onRetry, onExit }) {
+  const { t, isUr } = useLanguage()
+  const ur = HACKERS_TARGET_UR
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-[#02161c] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(34,211,238,0.16),transparent_48%),radial-gradient(ellipse_at_50%_100%,rgba(6,78,59,0.35),transparent_55%)]" />
@@ -168,7 +174,7 @@ function TargetBoardResultScreen({ score, wrongCount, target, timer, onRetry, on
             className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-xs text-slate-300 transition hover:bg-cyan-400/10 hover:text-cyan-200"
           >
             <ArrowLeft className="size-4" />
-            <span className="hidden sm:inline">Exit</span>
+            <span className="hidden sm:inline">{t('exit')}</span>
           </button>
           <div className="flex items-center gap-2">
             <div className="relative flex size-9 items-center justify-center rounded-lg bg-cyan-500/15 ring-1 ring-cyan-400/55">
@@ -177,17 +183,20 @@ function TargetBoardResultScreen({ score, wrongCount, target, timer, onRetry, on
             </div>
             <div>
               <h1 className="font-game text-[10px] font-bold tracking-[0.16em] text-white sm:text-sm md:text-base">
-                SECURE THE NETWORK
+                {isUr ? ur.secureTheNetwork : 'SECURE THE NETWORK'}
               </h1>
               <p className="hidden font-mono text-[9px] tracking-[0.2em] text-cyan-400/70 sm:block">
-                MISSION DEBRIEF
+                {isUr ? ur.missionDebrief : 'MISSION DEBRIEF'}
               </p>
             </div>
           </div>
         </div>
-        <span className="rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-2.5 py-1.5 font-mono text-[10px] font-semibold tracking-wide text-emerald-300 sm:text-xs">
-          STATUS: CLEARED
-        </span>
+        <div className="flex items-center gap-2">
+          <LangToggleGame />
+          <span className="rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-2.5 py-1.5 font-mono text-[10px] font-semibold tracking-wide text-emerald-300 sm:text-xs">
+            {isUr ? ur.statusCleared : 'STATUS: CLEARED'}
+          </span>
+        </div>
       </header>
 
       <div className="relative z-20 flex flex-1 items-center justify-center p-4 sm:p-8">
@@ -196,27 +205,35 @@ function TargetBoardResultScreen({ score, wrongCount, target, timer, onRetry, on
             <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-300 shadow-[0_0_28px_rgba(52,211,153,0.35)] ring-1 ring-emerald-400/40">
               <ShieldCheck className="size-10" />
             </div>
-            <p className="font-mono text-[11px] tracking-[0.22em] text-slate-400">MISSION DEBRIEF</p>
+            <p className="font-mono text-[11px] tracking-[0.22em] text-slate-400">
+              {isUr ? ur.missionDebrief : 'MISSION DEBRIEF'}
+            </p>
             <h2 className="mt-2 font-game text-2xl font-bold tracking-wide text-emerald-300 sm:text-3xl">
-              TARGET SHIELDED
+              {isUr ? ur.targetShielded : 'TARGET SHIELDED'}
             </h2>
             <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-slate-300">
-              You spotted the prime target. Soft vendor accounts are often the first door hackers open.
+              {isUr
+                ? ur.resultBlurb
+                : 'You spotted the prime target. Soft vendor accounts are often the first door hackers open.'}
             </p>
           </div>
 
           <div className="space-y-4 px-6 pb-6 sm:px-8 sm:pb-8">
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <div className="rounded-xl border border-cyan-500/25 bg-slate-900/70 p-3 text-center">
-                <p className="font-mono text-[9px] tracking-wider text-slate-500">SCORE</p>
+                <p className="font-mono text-[9px] tracking-wider text-slate-500">{t('score')}</p>
                 <p className="mt-1 font-game text-xl font-bold text-cyan-300">{score}</p>
               </div>
               <div className="rounded-xl border border-cyan-500/25 bg-slate-900/70 p-3 text-center">
-                <p className="font-mono text-[9px] tracking-wider text-slate-500">MISSES</p>
+                <p className="font-mono text-[9px] tracking-wider text-slate-500">
+                  {isUr ? ur.misses : 'MISSES'}
+                </p>
                 <p className="mt-1 font-game text-xl font-bold text-cyan-300">{wrongCount}</p>
               </div>
               <div className="rounded-xl border border-cyan-500/25 bg-slate-900/70 p-3 text-center">
-                <p className="font-mono text-[9px] tracking-wider text-slate-500">TIME</p>
+                <p className="font-mono text-[9px] tracking-wider text-slate-500">
+                  {isUr ? ur.time : 'TIME'}
+                </p>
                 <p className="mt-1 font-game text-xl font-bold text-cyan-300">{timer}</p>
               </div>
             </div>
@@ -227,7 +244,9 @@ function TargetBoardResultScreen({ score, wrongCount, target, timer, onRetry, on
                   <img src={target.src} alt="" className="h-[78%] w-[78%] object-contain" />
                 </div>
                 <div className="min-w-0 text-left">
-                  <p className="font-mono text-[9px] tracking-[0.18em] text-emerald-400/80">PRIMARY TARGET</p>
+                  <p className="font-mono text-[9px] tracking-[0.18em] text-emerald-400/80">
+                    {isUr ? ur.primaryTarget : 'PRIMARY TARGET'}
+                  </p>
                   <p className="mt-1 font-game text-sm font-bold tracking-wide text-emerald-200 sm:text-base">
                     {target.label}
                   </p>
@@ -237,9 +256,13 @@ function TargetBoardResultScreen({ score, wrongCount, target, timer, onRetry, on
             )}
 
             <div className="rounded-xl border border-cyan-500/20 bg-slate-900/50 p-3 sm:p-4">
-              <p className="font-mono text-[9px] tracking-[0.18em] text-cyan-400/70">KEY TAKEAWAY</p>
+              <p className="font-mono text-[9px] tracking-[0.18em] text-cyan-400/70">
+                {isUr ? ur.keyTakeaway : 'KEY TAKEAWAY'}
+              </p>
               <p className="mt-2 text-sm leading-relaxed text-slate-200">
-                Attackers often start at the weakest linked vendor — it is the easiest door into a larger network.
+                {isUr
+                  ? ur.keyTakeawayBody
+                  : 'Attackers often start at the weakest linked vendor — it is the easiest door into a larger network.'}
               </p>
             </div>
 
@@ -249,14 +272,14 @@ function TargetBoardResultScreen({ score, wrongCount, target, timer, onRetry, on
                 onClick={onRetry}
                 className="flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-xl border border-cyan-400/40 font-game text-sm font-bold tracking-wider text-cyan-300 transition hover:bg-cyan-400/10"
               >
-                PLAY AGAIN
+                {t('playAgain')}
               </button>
               <button
                 type="button"
                 onClick={onExit}
                 className="flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-xl bg-cyan-400 font-game text-sm font-bold tracking-wider text-slate-950 transition hover:bg-cyan-300"
               >
-                BACK TO MODULE
+                {t('backToModule')}
               </button>
             </div>
           </div>
@@ -267,15 +290,45 @@ function TargetBoardResultScreen({ score, wrongCount, target, timer, onRetry, on
 }
 
 export default function HackersTargetBoardGame({ onExit }) {
+  const { t, isUr } = useLanguage()
+  const ur = HACKERS_TARGET_UR
+
+  const assets = useMemo(
+    () =>
+      ASSETS_BASE.map((asset) => {
+        const copy = ur.assets[asset.id]
+        return {
+          ...asset,
+          label: isUr && copy ? copy.label : asset.label,
+          reason: isUr && copy ? copy.reason : asset.reason,
+        }
+      }),
+    [isUr, ur],
+  )
+
+  const splashLabels = useMemo(
+    () =>
+      SPLASH_LABELS_BASE.map((label) => ({
+        ...label,
+        text: isUr && ur.splashLabels[label.id] ? ur.splashLabels[label.id] : label.text,
+      })),
+    [isUr, ur],
+  )
+
+  const typeLines = useMemo(
+    () => (isUr ? [ur.playPrompt, ur.spotPrime] : TYPE_LINES_EN),
+    [isUr, ur],
+  )
+
   const [phase, setPhase] = useState('intro')
   const [picked, setPicked] = useState(null)
   const [wrongIds, setWrongIds] = useState([])
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState(null)
   const [splashReady, setSplashReady] = useState(false)
-  const typing = useTypewriter(TYPE_LINES, { start: phase === 'intro' })
+  const typing = useTypewriter(typeLines, { start: phase === 'intro' })
   const timer = useElapsedTimer(phase === 'play')
-  const pickedAsset = ASSETS.find((asset) => asset.id === picked) ?? null
+  const pickedAsset = assets.find((asset) => asset.id === picked) ?? null
   const locked = Boolean(pickedAsset?.correct)
 
   function resetPlay() {
@@ -293,7 +346,7 @@ export default function HackersTargetBoardGame({ onExit }) {
       setWrongIds((ids) => [...ids, asset.id])
       setFeedback({
         tone: 'bad',
-        title: 'Wrong target — try again',
+        title: isUr ? ur.wrongTarget : 'Wrong target — try again',
         detail: asset.reason,
       })
       return
@@ -304,7 +357,7 @@ export default function HackersTargetBoardGame({ onExit }) {
     setScore(nextScore)
     setFeedback({
       tone: 'good',
-      title: 'Correct target',
+      title: isUr ? ur.correctTarget : 'Correct target',
       detail: asset.reason,
     })
     window.setTimeout(() => setPhase('result'), 2800)
@@ -328,13 +381,17 @@ export default function HackersTargetBoardGame({ onExit }) {
       <div className="fixed inset-0 z-50 h-dvh w-screen overflow-hidden rounded-none bg-black text-white">
         <img
           src={splash}
-          alt="Hacker’s Target Board"
+          alt={isUr ? ur.hackersTargetBoard : "Hacker’s Target Board"}
           className="absolute inset-0 size-full rounded-none object-cover object-center"
         />
 
-        {SPLASH_LABELS.map((label) => (
+        <div className="absolute end-4 top-4 z-30">
+          <LangToggleGame />
+        </div>
+
+        {splashLabels.map((label) => (
           <p
-            key={label.text}
+            key={label.id}
             style={{ '--float-delay': label.delay }}
             className={`splash-float-up splash-metal-text absolute z-10 max-w-[13rem] text-center font-game text-base font-bold uppercase leading-tight tracking-wide sm:max-w-[16rem] sm:text-xl md:text-2xl lg:text-3xl ${label.className}`}
           >
@@ -345,12 +402,12 @@ export default function HackersTargetBoardGame({ onExit }) {
         <div className="absolute inset-x-0 top-[44%] z-10 flex -translate-y-1/2 flex-col items-center px-4 sm:top-[46%]">
           <p className="splash-metal-text min-h-[1.4em] text-center font-game text-lg font-bold tracking-wide sm:text-2xl md:text-3xl lg:text-4xl">
             {typing.lineIndex === 0
-              ? TYPE_LINES[0].slice(0, typing.charIndex)
-              : TYPE_LINES[0]}
+              ? typeLines[0].slice(0, typing.charIndex)
+              : typeLines[0]}
             {typing.lineIndex === 0 && !typing.done && <span className="splash-caret">&nbsp;</span>}
           </p>
           <p className="splash-metal-text mt-2 min-h-[1.3em] text-center font-game text-base font-semibold tracking-wider sm:mt-3 sm:text-xl md:text-2xl lg:text-3xl">
-            {typing.lineIndex >= 1 ? TYPE_LINES[1].slice(0, typing.charIndex) : ''}
+            {typing.lineIndex >= 1 ? typeLines[1].slice(0, typing.charIndex) : ''}
             {typing.lineIndex >= 1 && !typing.done && <span className="splash-caret">&nbsp;</span>}
             {typing.done && <span className="splash-caret">&nbsp;</span>}
           </p>
@@ -358,7 +415,9 @@ export default function HackersTargetBoardGame({ onExit }) {
 
         <div className="absolute inset-x-0 bottom-0 z-20 rounded-none bg-linear-to-t from-black/80 via-black/35 to-transparent px-4 pb-8 pt-20 sm:px-8 sm:pb-10">
           <p className="splash-metal-text mx-auto max-w-3xl text-center font-game text-base font-semibold leading-relaxed tracking-wide sm:text-xl md:text-2xl">
-            Four company assets are exposed. Spot the prime target the hacker hits first.
+            {isUr
+              ? ur.splashBlurb
+              : 'Four company assets are exposed. Spot the prime target the hacker hits first.'}
           </p>
           <span
             className="splash-bar mt-5 block h-1 w-full origin-left rounded-none bg-sky-400"
@@ -370,7 +429,7 @@ export default function HackersTargetBoardGame({ onExit }) {
               onClick={() => setPhase('play')}
               className="game-pop mx-auto mt-5 flex min-h-12 w-full max-w-xs cursor-pointer items-center justify-center rounded-xl bg-sky-400 px-8 font-game text-lg font-bold tracking-wider text-slate-900 hover:bg-sky-300 sm:min-h-14 sm:text-xl md:text-2xl"
             >
-              Play Now
+              {t('playNow')}
             </button>
           )}
         </div>
@@ -393,7 +452,7 @@ export default function HackersTargetBoardGame({ onExit }) {
               className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-xs text-slate-300 transition hover:bg-cyan-400/10 hover:text-cyan-200"
             >
               <ArrowLeft className="size-4" />
-              <span className="hidden sm:inline">Exit</span>
+              <span className="hidden sm:inline">{t('exit')}</span>
             </button>
             <div className="flex items-center gap-2">
               <div className="relative flex size-9 items-center justify-center rounded-lg bg-cyan-500/15 ring-1 ring-cyan-400/55">
@@ -402,24 +461,25 @@ export default function HackersTargetBoardGame({ onExit }) {
               </div>
               <div>
                 <h1 className="font-game text-[10px] font-bold tracking-[0.16em] text-white sm:text-sm md:text-base">
-                  SECURE THE NETWORK
+                  {isUr ? ur.secureTheNetwork : 'SECURE THE NETWORK'}
                 </h1>
                 <p className="hidden font-mono text-[9px] tracking-[0.2em] text-cyan-400/70 sm:block">
-                  HACKER&apos;S TARGET BOARD
+                  {isUr ? ur.hackersTargetBoard : "HACKER'S TARGET BOARD"}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+            <LangToggleGame />
             <span className="rounded-lg border border-cyan-400/40 bg-cyan-950/40 px-2.5 py-1.5 font-mono text-[10px] text-cyan-200 sm:text-xs">
-              TIMER: {timer}
+              {t('timer')}: {timer}
             </span>
             <span className="rounded-lg border border-cyan-400/40 bg-cyan-950/40 px-2.5 py-1.5 font-mono text-[10px] text-cyan-200 sm:text-xs">
-              SCORE: {score} pts
+              {t('score')}: {score} pts
             </span>
             <span className="rounded-lg border border-cyan-400/50 bg-cyan-500/10 px-2.5 py-1.5 font-mono text-[10px] font-semibold tracking-wide text-cyan-300 sm:text-xs">
-              LEVEL: 01 / STATUS: ACTIVE
+              {isUr ? ur.statusActive : 'LEVEL: 01 / STATUS: ACTIVE'}
             </span>
           </div>
         </header>
@@ -428,8 +488,8 @@ export default function HackersTargetBoardGame({ onExit }) {
           <aside className="relative hidden w-16 shrink-0 flex-col items-center gap-3 border-r border-cyan-500/15 py-4 md:flex lg:w-24">
             <BinaryRain columns={3} />
             <div className="relative z-10 flex w-full flex-col gap-2 px-2">
-              <HoloStat label="TIMER" value={timer} />
-              <HoloStat label="SCORE" value={`${score}`} />
+              <HoloStat label={t('timer')} value={timer} />
+              <HoloStat label={t('score')} value={`${score}`} />
             </div>
             <p className="htb-code-stream relative z-10 mt-auto px-1 font-mono text-[9px] text-cyan-400/50">
               LIVE STATUS : / LEVEL 01
@@ -438,12 +498,12 @@ export default function HackersTargetBoardGame({ onExit }) {
 
           <main className="relative flex min-w-0 flex-1 flex-col px-3 pb-2 pt-3 sm:px-6 sm:pt-4">
             <p className="relative z-20 mx-auto max-w-3xl text-center text-base font-semibold leading-snug text-white drop-shadow-[0_0_12px_rgba(34,211,238,0.45)] sm:text-xl md:text-2xl lg:text-3xl">
-              Hacker sab se pehle kis par nazar rakhega?
+              {isUr ? ur.playPrompt : TYPE_LINES_EN[0]}
             </p>
 
             <div className="relative z-20 mx-auto mt-2 flex w-full max-w-5xl flex-1 flex-col items-center justify-end">
               <div className="relative z-30 mb-2 flex w-full max-w-4xl justify-center gap-2 px-1 sm:mb-4 sm:gap-4 md:gap-5">
-                {ASSETS.map((asset, i) => {
+                {assets.map((asset, i) => {
                   const arc = ARC[i]
                   const isWrong = wrongIds.includes(asset.id)
                   const isCorrectPick = picked === asset.id && asset.correct

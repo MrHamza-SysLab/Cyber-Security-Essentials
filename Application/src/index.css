@@ -20,6 +20,60 @@
     overflow-x: hidden;
   }
 
+  html.lang-ur {
+    --font-sans: "Noto Nastaliq Urdu", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-game: "Noto Nastaliq Urdu", "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  html.lang-ur body {
+    line-height: 1.95;
+  }
+
+  /* Nastaliq joins break with letter-spacing / tracking / uppercase */
+  html.lang-ur,
+  html.lang-ur * {
+    letter-spacing: normal !important;
+  }
+
+  html.lang-ur .uppercase,
+  html.lang-ur [class*="tracking-"] {
+    text-transform: none !important;
+    letter-spacing: normal !important;
+  }
+
+  /*
+    bg-clip-text + text-transparent clips Nastaliq glyph strokes
+    (titles look garbled / wrong letters). Fall back to solid cyan.
+  */
+  html.lang-ur .bg-clip-text,
+  html.lang-ur [class*="bg-clip-text"] {
+    background-image: none !important;
+    -webkit-background-clip: border-box !important;
+    background-clip: border-box !important;
+    color: #a5f3fc !important;
+    -webkit-text-fill-color: #a5f3fc !important;
+  }
+
+  /* truncate + tight line-boxes crop Nastaliq ascenders/descenders */
+  html.lang-ur .truncate {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.85;
+  }
+
+  html.lang-ur header,
+  html.lang-ur h1,
+  html.lang-ur h2,
+  html.lang-ur h3 {
+    line-height: 1.85;
+  }
+
+  html.lang-ur .font-game,
+  html.lang-ur .font-mono {
+    letter-spacing: normal !important;
+  }
+
   body {
     margin: 0;
     min-height: 100dvh;
@@ -288,6 +342,18 @@
   -webkit-text-stroke: 0.6px rgba(0, 0, 0, 0.92);
   paint-order: stroke fill;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+}
+
+/* Nastaliq glyphs break under background-clip + text-stroke */
+html.lang-ur .splash-metal-text {
+  background-image: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: #f1f5f9;
+  -webkit-text-fill-color: #f1f5f9;
+  -webkit-text-stroke: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.65));
+  line-height: 1.9;
 }
 
 @keyframes binary-rain-fall {

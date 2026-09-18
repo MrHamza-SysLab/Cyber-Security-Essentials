@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 import splash from '../../../assets/games/password-strength-cracker/splash.png'
+import { useLanguage } from '../../../i18n/LanguageContext'
 import CyberSplash, { CyberHud, FeedbackToast } from '../shared/CyberSplash'
 
 const OBJECTIVE =
@@ -752,6 +753,7 @@ function CreatePasswordScreen({
 }
 
 export default function PasswordStrengthCrackerGame({ onExit }) {
+  const { t } = useLanguage()
   const [phase, setPhase] = useState('intro')
   const [created, setCreated] = useState([])
   const [createIndex, setCreateIndex] = useState(0)
@@ -882,6 +884,7 @@ export default function PasswordStrengthCrackerGame({ onExit }) {
         lines={BRIEF}
         cta="CREATE PASSWORDS"
         alt="Password Strength Cracker"
+        centerHero={['PASSWORD', 'STRENGTH', 'CRACKER']}
         onPlay={() => setPhase('create')}
       />
     )
@@ -984,7 +987,7 @@ export default function PasswordStrengthCrackerGame({ onExit }) {
                 onClick={onExit}
                 className="min-h-12 cursor-pointer rounded-xl bg-cyan-400 px-5 font-game text-sm font-bold text-slate-950"
               >
-                Back to module
+                {t('backToModule')}
               </button>
             </div>
           </div>

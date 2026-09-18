@@ -16,6 +16,7 @@ import {
 import splash from '../../../assets/games/mfa-gatekeeper/splash.png'
 import wrongChoiceAlarm from '../../../assets/games/social-engineering-trap-detector/wrong-choice-alarm.mp3'
 import CyberSplash, { CyberHud, FeedbackToast } from '../shared/CyberSplash'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 const BRIEF = [
   'MFA GATEKEEPER',
@@ -401,6 +402,7 @@ function NotificationShadePhone({ count, busy, onApprove, onReport }) {
 }
 
 export default function MFAGatekeeperGame({ onExit }) {
+  const { t } = useLanguage()
   const [phase, setPhase] = useState('intro')
   const [step, setStep] = useState(0)
   const [score, setScore] = useState(0)
@@ -528,7 +530,7 @@ export default function MFAGatekeeperGame({ onExit }) {
                 onClick={onExit}
                 className="min-h-12 cursor-pointer rounded-xl bg-cyan-400 px-5 font-game text-sm font-bold text-slate-950"
               >
-                Back to module
+                {t('backToModule')}
               </button>
             </div>
           </div>

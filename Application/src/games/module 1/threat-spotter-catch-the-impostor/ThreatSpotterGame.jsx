@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import splash from '../../../assets/games/threat-spotter-catch-the-impostor/splash.jpg'
+import { LangToggleGame } from '../../../components/LangToggle'
+import { useLanguage } from '../../../i18n/LanguageContext'
+import { THREAT_SPOTTER_UR } from '../../../i18n/module1'
 import PhishingDefender from './PhishingDefender/App'
 
 const HACK_DURATION_MS = 5000
 
-const DESC_LINES = [
+const DESC_LINES_EN = [
   'INTRUSION DETECTED',
   'Hacker ne ye attacks fire kiye:',
   '• Phishing — fake payroll / login links',
@@ -25,7 +28,7 @@ function useTypewriter(lines, { start = true, charMs = 28, linePauseMs = 320 } =
     setCharIndex(0)
     setDone(false)
     return undefined
-  }, [start])
+  }, [start, lines])
 
   useEffect(() => {
     if (!start || done) return undefined
@@ -94,9 +97,13 @@ function BinaryRain({ columns = 10, stopAfterMs = HACK_DURATION_MS }) {
 }
 
 function ThreatSpotterSplash({ onPlay }) {
+  const { t, isUr } = useLanguage()
+  const ur = THREAT_SPOTTER_UR
+  const descLines = useMemo(() => (isUr ? ur.DESC_LINES : DESC_LINES_EN), [isUr, ur])
+
   const [showBrief, setShowBrief] = useState(false)
   const [canPlay, setCanPlay] = useState(false)
-  const typing = useTypewriter(DESC_LINES, { start: showBrief })
+  const typing = useTypewriter(descLines, { start: showBrief })
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowBrief(true), HACK_DURATION_MS)
@@ -119,6 +126,10 @@ function ThreatSpotterSplash({ onPlay }) {
         alt="Threat Spotter: Catch the Impostor"
         className="absolute inset-0 size-full rounded-none object-cover object-center"
       />
+
+      <div className="absolute end-4 top-4 z-30">
+        <LangToggleGame />
+      </div>
 
       {/* Left — wall monitors: binary hack animation */}
       <div className={`${boxClass} left-[2%] top-[14%] sm:left-[3%] md:left-[4%]`}>
@@ -144,14 +155,14 @@ function ThreatSpotterSplash({ onPlay }) {
             ATTACK BRIEF // SOC
           </p>
           <div className="flex-1 space-y-2 overflow-y-auto font-mono text-sm leading-snug text-cyan-50 sm:text-base md:text-lg">
-            {DESC_LINES.map((line, index) => {
+            {descLines.map((line, index) => {
               if (index > typing.lineIndex) return null
               const shown =
                 index < typing.lineIndex ? line : line.slice(0, typing.charIndex)
               const isTitle = index === 0
               return (
                 <p
-                  key={line}
+                  key={`${index}-${line}`}
                   className={
                     isTitle
                       ? 'font-game text-base font-bold tracking-wide text-cyan-300 sm:text-lg md:text-xl'
@@ -175,7 +186,7 @@ function ThreatSpotterSplash({ onPlay }) {
               onClick={onPlay}
               className="game-pop mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-lg bg-cyan-400 px-4 font-game text-base font-bold tracking-wider text-slate-950 hover:bg-cyan-300 sm:min-h-12 sm:text-lg"
             >
-              IDENTIFY NOW
+              {isUr ? ur.identifyNow : t('playNow')}
             </button>
           )}
         </div>

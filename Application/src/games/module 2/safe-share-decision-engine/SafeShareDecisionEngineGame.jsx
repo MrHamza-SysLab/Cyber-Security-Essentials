@@ -24,6 +24,7 @@ import {
 import splash from '../../../assets/games/safe-share-decision-engine/splash.png'
 import wrongChoiceAlarm from '../../../assets/games/social-engineering-trap-detector/wrong-choice-alarm.mp3'
 import CyberSplash, { CyberHud, FeedbackToast } from '../shared/CyberSplash'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 const BRIEF = [
   'SAFE SHARE DECISION ENGINE',
@@ -179,6 +180,7 @@ const MAIL_LIST = [
 ]
 
 export default function SafeShareDecisionEngineGame({ onExit }) {
+  const { t } = useLanguage()
   const [phase, setPhase] = useState('intro')
   const [choice, setChoice] = useState(null)
   const [score, setScore] = useState(0)
@@ -263,7 +265,7 @@ export default function SafeShareDecisionEngineGame({ onExit }) {
                 onClick={onExit}
                 className="min-h-12 cursor-pointer rounded-xl bg-cyan-400 px-5 font-game text-sm font-bold text-slate-950"
               >
-                Back to module
+                {t('backToModule')}
               </button>
             </div>
           </div>

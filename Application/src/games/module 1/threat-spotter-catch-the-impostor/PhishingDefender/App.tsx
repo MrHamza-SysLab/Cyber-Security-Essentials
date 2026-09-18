@@ -24,6 +24,10 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Difficulty, type Email, EmailType, type GameStats } from './types';
 import { MOCK_EMAILS } from './constants';
+import { LangToggleGame } from '../../../../components/LangToggle';
+import { useLanguage } from '../../../../i18n/LanguageContext';
+import { THREAT_SPOTTER_UR } from '../../../../i18n/module1';
+import { localizeEmail } from '../../../../i18n/phishingEmails.ur';
 
 const EMAIL_COUNT = 8;
 const TOTAL_SCORE = 100;
@@ -43,6 +47,8 @@ type PhishingDefenderProps = {
 };
 
 export default function App({ onExit }: PhishingDefenderProps) {
+  const { t, isUr } = useLanguage();
+  const ur = THREAT_SPOTTER_UR;
   const [emails, setEmails] = useState<Email[]>([]);
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState<'inbox' | 'threats' | 'safe'>('inbox');
@@ -68,10 +74,10 @@ export default function App({ onExit }: PhishingDefenderProps) {
     setEmails(shuffleArray(MOCK_EMAILS).slice(0, EMAIL_COUNT));
   }, []);
 
-  const selectedEmail = useMemo(() =>
-    emails.find(e => e.id === selectedEmailId),
-    [emails, selectedEmailId]
-  );
+  const selectedEmail = useMemo(() => {
+    const found = emails.find(e => e.id === selectedEmailId);
+    return found ? localizeEmail(found, isUr) : undefined;
+  }, [emails, selectedEmailId, isUr]);
 
   const inboxEmails = useMemo(() =>
     emails.filter(e => !e.isReported),
@@ -198,7 +204,7 @@ export default function App({ onExit }: PhishingDefenderProps) {
           <button
             onClick={handleExit}
             className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-slate-700"
-            title="Back"
+            title={t('exit')}
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
@@ -206,38 +212,47 @@ export default function App({ onExit }: PhishingDefenderProps) {
             <Shield className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
           </div>
           <div className="min-w-0">
-            <h2 className="font-bold text-slate-900 leading-none text-sm sm:text-base truncate">Phishing Defender</h2>
-            <span className="text-[8px] sm:text-[10px] font-bold text-primary-blue uppercase tracking-widest hidden sm:block">Security Operations Center</span>
+            <h2 className="font-bold text-slate-900 leading-none text-sm sm:text-base truncate">
+              {isUr ? ur.phishingDefender : 'Phishing Defender'}
+            </h2>
+            <span className="text-[8px] sm:text-[10px] font-bold text-primary-blue uppercase tracking-widest hidden sm:block">
+              {isUr ? ur.soc : 'Security Operations Center'}
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-4 sm:gap-8">
           <div className="flex items-center gap-3 sm:gap-6">
             <div className="text-right hidden sm:block">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Level</div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {isUr ? ur.level : 'Level'}
+              </div>
               <div className="font-bold text-slate-900">{stats.level}</div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Score</div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('score')}</div>
               <div className="font-bold text-primary-blue">{Math.round(stats.score)}/{TOTAL_SCORE}</div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Accuracy</div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {isUr ? ur.accuracy : 'Accuracy'}
+              </div>
               <div className="font-bold text-emerald-600">{stats.accuracy.toFixed(0)}%</div>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
+            <LangToggleGame />
             <button
               onClick={resetGame}
               className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
-              title="Reset Game"
+              title={isUr ? ur.resetGame : 'Reset Game'}
             >
               <RefreshCcw className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button
               onClick={() => setShowHelp(true)}
               className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-primary-blue"
-              title="Help & Tips"
+              title={isUr ? ur.helpTips : 'Help & Tips'}
             >
               <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
@@ -253,7 +268,7 @@ export default function App({ onExit }: PhishingDefenderProps) {
             className={`flex items-center gap-3 p-3 rounded-xl font-semibold transition-all ${currentTab === 'inbox' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50'}`}
           >
             <Inbox className="w-5 h-5" />
-            <span>Inbox</span>
+            <span>{isUr ? ur.inbox : 'Inbox'}</span>
             <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full ${currentTab === 'inbox' ? 'bg-indigo-200 text-indigo-800' : 'bg-slate-100 text-slate-600'}`}>
               {inboxEmails.length}
             </span>
@@ -263,7 +278,7 @@ export default function App({ onExit }: PhishingDefenderProps) {
             className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentTab === 'threats' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-500 hover:bg-slate-50'}`}
           >
             <ShieldAlert className="w-5 h-5" />
-            <span>Threats</span>
+            <span>{isUr ? ur.threats : 'Threats'}</span>
             {threatEmails.length > 0 && (
               <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full ${currentTab === 'threats' ? 'bg-indigo-200 text-indigo-800' : 'bg-slate-100 text-slate-600'}`}>
                 {threatEmails.length}
@@ -275,7 +290,7 @@ export default function App({ onExit }: PhishingDefenderProps) {
             className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-all ${currentTab === 'safe' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-500 hover:bg-slate-50'}`}
           >
             <CheckCircle className="w-5 h-5" />
-            <span>Safe</span>
+            <span>{isUr ? ur.safe : 'Safe'}</span>
             {safeEmails.length > 0 && (
               <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full ${currentTab === 'safe' ? 'bg-indigo-200 text-indigo-800' : 'bg-slate-100 text-slate-600'}`}>
                 {safeEmails.length}
@@ -285,19 +300,21 @@ export default function App({ onExit }: PhishingDefenderProps) {
           <div className="mt-auto p-4 bg-slate-900 rounded-2xl text-white">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="w-4 h-4 text-indigo-400" />
-              <span className="text-xs font-bold uppercase tracking-wider opacity-60">Performance</span>
+              <span className="text-xs font-bold uppercase tracking-wider opacity-60">
+                {isUr ? ur.performance : 'Performance'}
+              </span>
             </div>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-xs opacity-60">Correct</span>
+                <span className="text-xs opacity-60">{isUr ? ur.correct : 'Correct'}</span>
                 <span className="text-xs font-bold">{stats.correct}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs opacity-60">False Positives</span>
+                <span className="text-xs opacity-60">{isUr ? ur.falsePositives : 'False Positives'}</span>
                 <span className="text-xs font-bold text-rose-400">{stats.falsePositives}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs opacity-60">Missed</span>
+                <span className="text-xs opacity-60">{isUr ? ur.missed : 'Missed'}</span>
                 <span className="text-xs font-bold text-amber-400">{stats.missed}</span>
               </div>
             </div>
@@ -311,7 +328,7 @@ export default function App({ onExit }: PhishingDefenderProps) {
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search inbox..."
+                placeholder={isUr ? ur.searchInbox : 'Search inbox...'}
                 className="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all"
               />
             </div>
@@ -328,25 +345,28 @@ export default function App({ onExit }: PhishingDefenderProps) {
                 </p>
               </div>
             ) : (
-              displayedEmails.map((email: Email) => (
+              displayedEmails.map((email: Email) => {
+                const localized = localizeEmail(email, isUr);
+                return (
                 <button
                   key={email.id}
                   onClick={() => setSelectedEmailId(email.id)}
                   className={`w-full p-4 text-left border-bottom border-slate-50 transition-all hover:bg-slate-50 flex gap-3 ${selectedEmailId === email.id ? 'bg-indigo-50/50 border-l-4 border-l-indigo-600' : ''}`}
                 >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${email.difficulty === Difficulty.HARD ? 'bg-rose-100 text-rose-600' : email.difficulty === Difficulty.MEDIUM ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'}`}>
-                    {email.fromName.charAt(0)}
+                    {localized.fromName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="font-bold text-sm text-slate-900 truncate">{email.fromName}</span>
-                      <span className="text-[10px] text-slate-400 font-medium">{email.date}</span>
+                      <span className="font-bold text-sm text-slate-900 truncate">{localized.fromName}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">{localized.date}</span>
                     </div>
-                    <div className="text-xs font-semibold text-slate-700 truncate mb-1">{email.subject}</div>
-                    <div className="text-xs text-slate-400 truncate">{email.body}</div>
+                    <div className="text-xs font-semibold text-slate-700 truncate mb-1">{localized.subject}</div>
+                    <div className="text-xs text-slate-400 truncate">{localized.body}</div>
                   </div>
                 </button>
-              ))
+                );
+              })
             )}
           </div>
         </section>
@@ -528,7 +548,7 @@ export default function App({ onExit }: PhishingDefenderProps) {
                       Phishing Indicators
                     </h3>
                     <ul className="space-y-2">
-                      {lastDecision.email.indicators.map((indicator, idx) => (
+                      {localizeEmail(lastDecision.email, isUr).indicators.map((indicator, idx) => (
                         <li key={idx} className="flex gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
                           <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold text-primary-blue shadow-sm">
                             {idx + 1}
@@ -694,6 +714,8 @@ function ResultScreen({
   onRetry: () => void;
   onExit: () => void;
 }) {
+  const { t, isUr } = useLanguage();
+  const ur = THREAT_SPOTTER_UR;
   const passed = stats.accuracy >= 70;
   const rank =
     stats.accuracy === 100
@@ -725,7 +747,7 @@ function ResultScreen({
           >
             {passed ? <Trophy className="w-10 h-10" /> : <ShieldAlert className="w-10 h-10" />}
           </div>
-          <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-slate-500 mb-2">Shift Debrief</p>
+          <p className="text-[11px] font-bold tracking-[0.2em] uppercase text-slate-500 mb-2">{t('debrief')}</p>
           <h2 className={`text-2xl sm:text-3xl font-black mb-2 ${passed ? 'text-emerald-900' : 'text-rose-900'}`}>
             {rank}
           </h2>
@@ -737,36 +759,44 @@ function ResultScreen({
         <div className="p-6 sm:p-8 space-y-5">
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Score</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{t('score')}</div>
               <div className="text-2xl font-black text-primary-blue">{Math.round(stats.score)}/{TOTAL_SCORE}</div>
             </div>
             <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Accuracy</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                {isUr ? ur.accuracy : 'Accuracy'}
+              </div>
               <div className="text-2xl font-black text-emerald-600">{stats.accuracy.toFixed(0)}%</div>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 mb-1">Correct</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 mb-1">
+                {isUr ? ur.correct : 'Correct'}
+              </div>
               <div className="text-lg font-bold text-emerald-700">{stats.correct}</div>
             </div>
             <div className="rounded-xl bg-rose-50 border border-rose-100 p-3 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600/80 mb-1">False +</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600/80 mb-1">
+                {isUr ? ur.falsePositives : 'False +'}
+              </div>
               <div className="text-lg font-bold text-rose-700">{stats.falsePositives}</div>
             </div>
             <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-center">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600/80 mb-1">Missed</div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-amber-600/80 mb-1">
+                {isUr ? ur.missed : 'Missed'}
+              </div>
               <div className="text-lg font-bold text-amber-700">{stats.missed}</div>
             </div>
           </div>
 
           <div className="flex items-center justify-between rounded-2xl bg-slate-900 text-white px-4 py-3 text-sm">
-            <span className="opacity-80">Filed as threats</span>
+            <span className="opacity-80">{isUr ? ur.threats : 'Filed as threats'}</span>
             <span className="font-bold">{threatCount}</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-slate-100 text-slate-700 px-4 py-3 text-sm -mt-2">
-            <span>Marked safe</span>
+            <span>{isUr ? ur.safe : 'Marked safe'}</span>
             <span className="font-bold">{safeCount}</span>
           </div>
 
@@ -777,14 +807,14 @@ function ResultScreen({
               className="flex-1 py-4 bg-primary-blue text-white rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
             >
               <RefreshCcw className="w-4 h-4" />
-              Play Again
+              {t('playAgain')}
             </button>
             <button
               type="button"
               onClick={onExit}
               className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold hover:bg-slate-200 transition-all"
             >
-              Back to Module
+              {t('backToModule')}
             </button>
           </div>
         </div>

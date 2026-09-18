@@ -1,23 +1,29 @@
 import { Bookmark, CheckCircle2, GraduationCap, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import LangToggle from '../components/LangToggle'
 import { GRADES, TRAININGS } from '../data/trainings'
+import { useLanguage } from '../i18n/LanguageContext'
+import { localizeTraining } from '../i18n/trainings.ur'
 
 export default function TrainingCatalog() {
+  const { t, isUr } = useLanguage()
   const [query, setQuery] = useState('')
   const [grade, setGrade] = useState('')
 
   const courses = useMemo(() => {
     const q = query.trim().toLowerCase()
     return TRAININGS.filter((course) => {
+      const localized = localizeTraining(course, isUr)
       const matchesQuery =
         !q ||
+        localized.title.toLowerCase().includes(q) ||
         course.title.toLowerCase().includes(q) ||
         course.org.toLowerCase().includes(q)
       const matchesGrade = !grade || course.grade === grade
       return matchesQuery && matchesGrade
-    })
-  }, [query, grade])
+    }).map((course) => localizeTraining(course, isUr))
+  }, [query, grade, isUr])
 
   function onSearch(event) {
     event.preventDefault()
@@ -26,13 +32,14 @@ export default function TrainingCatalog() {
   return (
     <div className="min-h-[calc(100dvh-4rem)] bg-linear-to-b from-page to-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-        <div className="text-center">
+        <div className="relative text-center">
+          <div className="absolute top-0 end-0">
+            <LangToggle />
+          </div>
           <h1 className="text-2xl font-bold tracking-tight text-navy sm:text-4xl">
-            Game-Based Training
+            {t('gameBasedTraining')}
           </h1>
-          <p className="mt-2 text-sm text-mute sm:text-base">
-            Explore interactive game-based courses to learn through play
-          </p>
+          <p className="mt-2 text-sm text-mute sm:text-base">{t('exploreInteractive')}</p>
         </div>
 
         <form
@@ -40,13 +47,13 @@ export default function TrainingCatalog() {
           className="mx-auto mt-8 flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center"
         >
           <label className="sr-only" htmlFor="training-search">
-            Search training courses
+            {t('searchPlaceholder')}
           </label>
           <input
             id="training-search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search training courses..."
+            placeholder={t('searchPlaceholder')}
             className="h-11 min-h-11 flex-1 rounded-full border border-slate-200 bg-white px-5 text-sm text-ink shadow-sm placeholder:text-slate-400"
           />
           <button
@@ -54,10 +61,10 @@ export default function TrainingCatalog() {
             className="inline-flex h-11 min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-slate-800 px-6 text-sm font-medium text-white transition hover:bg-slate-900"
           >
             <Search className="size-4" />
-            Search
+            {t('search')}
           </button>
           <label className="sr-only" htmlFor="grade-filter">
-            Filter by grade
+            {t('filterByGrade')}
           </label>
           <select
             id="grade-filter"
@@ -65,17 +72,17 @@ export default function TrainingCatalog() {
             onChange={(event) => setGrade(event.target.value)}
             className="h-11 min-h-11 cursor-pointer rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm"
           >
-            <option value="">Filter by Grade</option>
+            <option value="">{t('filterByGrade')}</option>
             {GRADES.map((item) => (
               <option key={item} value={item}>
-                {item}
+                {isUr ? t('professional') : item}
               </option>
             ))}
           </select>
         </form>
 
         {courses.length === 0 ? (
-          <p className="mt-16 text-center text-sm text-mute">No training courses match your search.</p>
+          <p className="mt-16 text-center text-sm text-mute">{t('noCoursesMatch')}</p>
         ) : (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {courses.map((course) => (
@@ -92,7 +99,7 @@ export default function TrainingCatalog() {
                   <button
                     type="button"
                     aria-label={`Bookmark ${course.title}`}
-                    className="absolute top-3 right-3 grid size-9 cursor-pointer place-items-center rounded-full bg-white/90 text-slate-500 shadow-sm transition hover:text-brand"
+                    className="absolute top-3 end-3 grid size-9 cursor-pointer place-items-center rounded-full bg-white/90 text-slate-500 shadow-sm transition hover:text-brand"
                   >
                     <Bookmark className="size-4" />
                   </button>
@@ -103,7 +110,7 @@ export default function TrainingCatalog() {
                   <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                     <span className="inline-flex items-center gap-1.5 font-medium text-brand">
                       <GraduationCap className="size-3.5" />
-                      professional
+                      {t('professional')}
                     </span>
                     <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600">
                       <CheckCircle2 className="size-3.5" />
@@ -114,7 +121,7 @@ export default function TrainingCatalog() {
                     to={`/course/${course.id}`}
                     className="mt-4 inline-flex h-11 min-h-11 w-full cursor-pointer items-center justify-center rounded-xl bg-brand text-sm font-semibold text-white transition hover:bg-brand-dark"
                   >
-                    Course Details
+                    {t('courseDetails')}
                   </Link>
                 </div>
               </article>

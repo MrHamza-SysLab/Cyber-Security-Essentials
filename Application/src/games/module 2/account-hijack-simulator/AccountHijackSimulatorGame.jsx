@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import splash from '../../../assets/games/account-hijack-simulator/splash.png'
 import CyberSplash, { CyberHud, FeedbackToast } from '../shared/CyberSplash'
+import { useLanguage } from '../../../i18n/LanguageContext'
 
 const BRIEF = [
   'ACCOUNT HIJACK SIMULATOR',
@@ -83,6 +84,7 @@ function GmailLogo() {
 }
 
 export default function AccountHijackSimulatorGame({ onExit }) {
+  const { t } = useLanguage()
   const [phase, setPhase] = useState('intro')
   const [panel, setPanel] = useState('inbox')
   const [found, setFound] = useState([])
@@ -127,6 +129,8 @@ export default function AccountHijackSimulatorGame({ onExit }) {
         lines={BRIEF}
         cta="START INVESTIGATION"
         alt="Account Hijack Simulator"
+        centerHero={['ACCOUNT', 'HIJACK', 'SIMULATOR']}
+        centerHeroTone="cyan"
         onPlay={() => setPhase('play')}
       />
     )
@@ -169,7 +173,7 @@ export default function AccountHijackSimulatorGame({ onExit }) {
                 onClick={onExit}
                 className="min-h-12 cursor-pointer rounded-xl bg-cyan-400 px-5 font-game text-sm font-bold text-slate-950"
               >
-                Back to module
+                {t('backToModule')}
               </button>
             </div>
           </div>

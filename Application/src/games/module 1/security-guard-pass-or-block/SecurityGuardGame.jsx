@@ -1,5 +1,5 @@
 import { ArrowLeft, Check, RotateCcw, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import office from '../../../assets/games/security-guard-pass-or-block/bg-branch.png'
 import encryptedFile from '../../../assets/games/security-guard-pass-or-block/item-encrypted-file.png'
 import lockedPhone from '../../../assets/games/security-guard-pass-or-block/item-locked-phone.png'
@@ -7,9 +7,12 @@ import splash from '../../../assets/games/security-guard-pass-or-block/splash-co
 import sticky from '../../../assets/games/security-guard-pass-or-block/item-sticky-password.png'
 import unlockedLaptop from '../../../assets/games/security-guard-pass-or-block/item-unlocked-laptop.png'
 import usb from '../../../assets/games/security-guard-pass-or-block/item-usb.png'
+import { LangToggleGame } from '../../../components/LangToggle'
+import { useLanguage } from '../../../i18n/LanguageContext'
+import { SECURITY_GUARD_UR } from '../../../i18n/module1'
 import { usePointerDrag } from '../shared/usePointerDrag'
 
-const ITEMS = [
+const ITEMS_BASE = [
   {
     id: 'laptop',
     label: 'Unlocked laptop',
@@ -49,9 +52,25 @@ const ITEMS = [
 
 const ROUND_SECONDS = 45
 const TOTAL_SCORE = 100
-const POINTS = TOTAL_SCORE / ITEMS.length
+const POINTS = TOTAL_SCORE / ITEMS_BASE.length
 
 export default function SecurityGuardGame({ onExit }) {
+  const { t, isUr } = useLanguage()
+  const ur = SECURITY_GUARD_UR
+
+  const items = useMemo(
+    () =>
+      ITEMS_BASE.map((item) => {
+        const copy = ur.items[item.id]
+        return {
+          ...item,
+          label: isUr && copy ? copy.label : item.label,
+          question: isUr && copy ? copy.question : item.question,
+        }
+      }),
+    [isUr, ur],
+  )
+
   const [phase, setPhase] = useState('intro')
   const [index, setIndex] = useState(0)
   const [correct, setCorrect] = useState(0)
@@ -62,8 +81,10 @@ export default function SecurityGuardGame({ onExit }) {
   const [answers, setAnswers] = useState([])
   const [splashReady, setSplashReady] = useState(false)
 
-  const item = ITEMS[index]
+  const item = items[index]
   const playing = phase === 'play' && !busy
+  const secureLabel = isUr ? ur.secureZone : 'SECURE ZONE'
+  const riskLabel = isUr ? ur.riskArea : 'RISK AREA'
 
   const { drag, start } = usePointerDrag(({ zoneId }) => {
     if (!zoneId || !playing) return
@@ -93,7 +114,7 @@ export default function SecurityGuardGame({ onExit }) {
     window.setTimeout(() => {
       setFlash(null)
       setBusy(false)
-      if (index + 1 >= ITEMS.length) setPhase('result')
+      if (index + 1 >= items.length) setPhase('result')
       else setIndex((value) => value + 1)
     }, 480)
   }
@@ -120,15 +141,18 @@ export default function SecurityGuardGame({ onExit }) {
         <div className="absolute inset-0 z-40 overflow-hidden bg-black">
           <img
             src={splash}
-            alt="Pass or Block"
+            alt={isUr ? ur.titleFull : 'Pass or Block'}
             className="absolute inset-0 size-full object-cover object-center"
           />
+          <div className="absolute end-4 top-4 z-30">
+            <LangToggleGame />
+          </div>
           <div className="absolute inset-x-0 bottom-0 z-20 bg-linear-to-t from-black/80 via-black/35 to-transparent px-4 pb-8 pt-20 sm:px-8 sm:pb-10">
             <p className="mx-auto max-w-2xl text-center text-sm font-semibold leading-relaxed text-white drop-shadow sm:text-lg">
-              Drag each item into the Secure Zone or the Risk Area. 5 items, 100 points, 45 seconds.
+              {isUr ? ur.introTip : 'Drag each item into the Secure Zone or the Risk Area. 5 items, 100 points, 45 seconds.'}
             </p>
             <span
-              className="splash-bar mt-5 block h-1 w-full origin-left rounded-full bg-cyan-400"
+              className="splash-bar mt-5 block h-1 w-full origin-left rounded-full bg-cyan-400 rtl:origin-right"
               onAnimationEnd={() => setSplashReady(true)}
             />
             {splashReady && (
@@ -137,7 +161,7 @@ export default function SecurityGuardGame({ onExit }) {
                 onClick={() => setPhase('play')}
                 className="game-pop mx-auto mt-5 flex min-h-12 w-full max-w-xs cursor-pointer items-center justify-center rounded-xl bg-cyan-400 px-8 text-base font-bold text-slate-900 hover:bg-cyan-300 sm:min-h-14 sm:text-lg"
               >
-                Play Now
+                {t('playNow')}
               </button>
             )}
           </div>
@@ -146,27 +170,33 @@ export default function SecurityGuardGame({ onExit }) {
 
       {phase !== 'intro' && (
         <div className="relative z-10 flex h-dvh max-h-dvh flex-col">
-          <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2 bg-[#16384d]/92 px-3 py-2 shadow-[0_10px_24px_rgba(0,20,40,0.35)] sm:gap-4 sm:px-6 sm:py-2.5">
-            <h1 className="min-w-0 truncate bg-linear-to-b from-cyan-100 to-cyan-400 bg-clip-text text-sm font-bold tracking-wide text-transparent sm:text-lg lg:text-xl">
-              <span className="sm:hidden">Pass or Block</span>
-              <span className="hidden sm:inline">Security Guard: Pass or Block</span>
+          <header className="grid shrink-0 grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] items-center gap-2 bg-[#16384d]/92 px-3 py-2.5 shadow-[0_10px_24px_rgba(0,20,40,0.35)] sm:gap-4 sm:px-6 sm:py-3">
+            <h1
+              className={`min-w-0 text-sm font-bold sm:text-lg lg:text-xl ${
+                isUr
+                  ? 'leading-[1.9] text-cyan-200'
+                  : 'truncate bg-linear-to-b from-cyan-100 to-cyan-400 bg-clip-text tracking-wide text-transparent'
+              }`}
+            >
+              <span className="sm:hidden">{isUr ? ur.title : 'Pass or Block'}</span>
+              <span className="hidden sm:inline">{isUr ? ur.titleFull : 'Security Guard: Pass or Block'}</span>
             </h1>
             <div className="flex items-center justify-center gap-3 sm:gap-6 lg:gap-8">
               <p className="shrink-0 text-[11px] font-semibold text-cyan-50 sm:text-sm lg:text-base">
-                Score: <span className="tabular-nums">{score}/{TOTAL_SCORE}</span>
+                {t('score')}: <span className="tabular-nums">{score}/{TOTAL_SCORE}</span>
               </p>
               <p className="shrink-0 text-[11px] font-semibold text-cyan-50 sm:text-sm lg:text-base">
-                Timer: <span className="tabular-nums">{clock}</span>
+                {t('timer')}: <span className="tabular-nums">{clock}</span>
               </p>
               <div className="flex items-center gap-2">
                 <span className="hidden shrink-0 text-sm font-semibold text-cyan-50 md:inline lg:text-base">
-                  Security Score:
+                  {isUr ? ur.securityScore : 'Security Score'}:
                 </span>
                 <div
                   className="flex items-center gap-1 sm:w-36 sm:gap-1.5 lg:w-48"
-                  aria-label={`Security score ${correct} of ${ITEMS.length}`}
+                  aria-label={`Security score ${correct} of ${items.length}`}
                 >
-                  {ITEMS.map((_, i) => (
+                  {items.map((_, i) => (
                     <span
                       key={i}
                       className={`size-2 shrink-0 rounded-full sm:h-3.5 sm:w-auto sm:min-w-0 sm:flex-1 sm:rounded-[3px] ${
@@ -177,14 +207,17 @@ export default function SecurityGuardGame({ onExit }) {
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={onExit}
-              className="ml-auto inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-cyan-50 hover:bg-white/10 sm:min-h-10 sm:px-3 sm:text-sm"
-            >
-              <ArrowLeft className="size-4" />
-              Exit
-            </button>
+            <div className="ml-auto flex items-center gap-2 rtl:ml-0 rtl:mr-auto">
+              <LangToggleGame />
+              <button
+                type="button"
+                onClick={onExit}
+                className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-cyan-50 hover:bg-white/10 sm:min-h-10 sm:px-3 sm:text-sm"
+              >
+                <ArrowLeft className="size-4 rtl:rotate-180" />
+                {t('exit')}
+              </button>
+            </div>
           </header>
 
           {phase === 'play' && item && (
@@ -212,7 +245,7 @@ export default function SecurityGuardGame({ onExit }) {
 
                 <Zone
                   id="secure"
-                  label="SECURE ZONE"
+                  label={secureLabel}
                   active={flash === 'ok'}
                   onClick={() => decide('secure')}
                   className="md:col-start-1 md:row-start-1"
@@ -220,7 +253,7 @@ export default function SecurityGuardGame({ onExit }) {
 
                 <Zone
                   id="risk"
-                  label="RISK AREA"
+                  label={riskLabel}
                   danger
                   active={flash === 'bad'}
                   onClick={() => decide('risk')}
@@ -231,7 +264,15 @@ export default function SecurityGuardGame({ onExit }) {
           )}
 
           {phase === 'result' && (
-            <ResultBoard score={score} answers={answers} onRetry={restart} onExit={onExit} />
+            <ResultBoard
+              score={score}
+              answers={answers}
+              items={items}
+              secureLabel={isUr ? ur.secureZone : 'Secure Zone'}
+              riskLabel={isUr ? ur.riskArea : 'Risk Area'}
+              onRetry={restart}
+              onExit={onExit}
+            />
           )}
         </div>
       )}
@@ -248,20 +289,41 @@ export default function SecurityGuardGame({ onExit }) {
   )
 }
 
-function zoneName(zone) {
-  return zone === 'secure' ? 'Secure Zone' : 'Risk Area'
-}
-
-function ResultBoard({ score, answers, onRetry, onExit }) {
+function ResultBoard({ score, answers, items, secureLabel, riskLabel, onRetry, onExit }) {
+  const { t, isUr } = useLanguage()
+  const ur = SECURITY_GUARD_UR
   const [shown, setShown] = useState(0)
   const [selected, setSelected] = useState(null)
   const passed = score >= 80
-  const rank =
-    score === 100 ? 'Perfect guard' : passed ? 'Zone cleared' : score >= 40 ? 'Needs another round' : 'Guard missed the shift'
+
+  function zoneName(zone) {
+    return zone === 'secure' ? secureLabel : riskLabel
+  }
+
+  const rank = isUr
+    ? score === 100
+      ? ur.ranks.perfect
+      : passed
+        ? ur.ranks.cleared
+        : score >= 40
+          ? ur.ranks.needsRound
+          : ur.ranks.missed
+    : score === 100
+      ? 'Perfect guard'
+      : passed
+        ? 'Zone cleared'
+        : score >= 40
+          ? 'Needs another round'
+          : 'Guard missed the shift'
+
   const tip =
     score === 100
-      ? 'Every item was sorted right. Unlocked devices, sticky passwords, and unknown USBs stay in the Risk Area.'
-      : 'Tap any item below to see where it belonged. Unlocked laptops, sticky passwords, and unknown USBs go to the Risk Area.'
+      ? isUr
+        ? ur.tipPerfect
+        : 'Every item was sorted right. Unlocked devices, sticky passwords, and unknown USBs stay in the Risk Area.'
+      : isUr
+        ? ur.tipReview
+        : 'Tap any item below to see where it belonged. Unlocked laptops, sticky passwords, and unknown USBs go to the Risk Area.'
 
   useEffect(() => {
     let value = 0
@@ -274,7 +336,7 @@ function ResultBoard({ score, answers, onRetry, onExit }) {
     return () => window.clearInterval(timer)
   }, [score])
 
-  const review = ITEMS.map((item) => {
+  const review = items.map((item) => {
     const answer = answers.find((entry) => entry.id === item.id)
     return {
       ...item,
@@ -284,17 +346,21 @@ function ResultBoard({ score, answers, onRetry, onExit }) {
     }
   })
 
+  const okCount = answers.filter((entry) => entry.ok).length
+
   return (
     <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4 sm:p-6">
       <div className="game-pop w-full max-w-3xl rounded-3xl bg-[#16384d]/95 p-5 shadow-[0_24px_60px_rgba(0,20,40,0.45)] ring-1 ring-cyan-200/30 sm:p-7">
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-8">
           <ScoreRing score={score} shown={shown} passed={passed} />
-          <div className="min-w-0 flex-1 text-center sm:text-left">
-            <p className="text-xs font-semibold tracking-[0.2em] text-cyan-300 uppercase">Debrief</p>
+          <div className="min-w-0 flex-1 text-center sm:text-start">
+            <p className="text-xs font-semibold tracking-[0.2em] text-cyan-300 uppercase">{t('debrief')}</p>
             <h2 className="mt-1 text-2xl font-bold sm:text-3xl">{rank}</h2>
             <p className="mt-2 text-sm leading-relaxed text-cyan-100 sm:text-base">{tip}</p>
             <p className="mt-3 text-sm font-semibold text-cyan-50">
-              {answers.filter((entry) => entry.ok).length}/{ITEMS.length} items sorted right · {POINTS} pts each
+              {isUr
+                ? `${items.length} میں سے ${okCount} اشیاء درست چھانٹیں · ہر ایک ${POINTS} پوائنٹس`
+                : `${okCount}/${items.length} items sorted right · ${POINTS} pts each`}
             </p>
           </div>
         </div>
@@ -307,7 +373,7 @@ function ResultBoard({ score, answers, onRetry, onExit }) {
                 key={item.id}
                 type="button"
                 onClick={() => setSelected(open ? null : item.id)}
-                className={`cursor-pointer rounded-2xl p-2 text-left ring-1 transition sm:p-3 ${
+                className={`cursor-pointer rounded-2xl p-2 text-start ring-1 transition sm:p-3 ${
                   item.ok
                     ? 'bg-emerald-400/10 ring-emerald-300/40 hover:bg-emerald-400/16'
                     : 'bg-red-400/10 ring-red-300/35 hover:bg-red-400/16'
@@ -316,7 +382,7 @@ function ResultBoard({ score, answers, onRetry, onExit }) {
                 <div className="relative">
                   <img src={item.src} alt="" className="mx-auto h-16 w-16 object-contain sm:h-20 sm:w-20" />
                   <span
-                    className={`absolute -top-1 -right-1 grid size-5 place-items-center rounded-full ${
+                    className={`absolute -top-1 -end-1 grid size-5 place-items-center rounded-full ${
                       item.ok ? 'bg-emerald-400 text-slate-900' : 'bg-red-400 text-white'
                     }`}
                   >
@@ -327,10 +393,16 @@ function ResultBoard({ score, answers, onRetry, onExit }) {
                 {open && (
                   <p className="mt-2 text-center text-[11px] leading-snug text-cyan-50">
                     {item.skipped
-                      ? `Time ran out. Correct: ${zoneName(item.zone)}`
+                      ? isUr
+                        ? `وقت ختم۔ درست: ${zoneName(item.zone)}`
+                        : `Time ran out. Correct: ${zoneName(item.zone)}`
                       : item.ok
-                        ? `Correct — ${zoneName(item.zone)}`
-                        : `You chose ${zoneName(item.picked)}. Correct: ${zoneName(item.zone)}`}
+                        ? isUr
+                          ? `درست — ${zoneName(item.zone)}`
+                          : `Correct — ${zoneName(item.zone)}`
+                        : isUr
+                          ? `آپ نے ${zoneName(item.picked)} چنا۔ درست: ${zoneName(item.zone)}`
+                          : `You chose ${zoneName(item.picked)}. Correct: ${zoneName(item.zone)}`}
                   </p>
                 )}
               </button>
@@ -345,14 +417,14 @@ function ResultBoard({ score, answers, onRetry, onExit }) {
             className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-cyan-400 px-6 text-sm font-bold text-slate-900 hover:bg-cyan-300"
           >
             <RotateCcw className="size-4" />
-            Play again
+            {t('playAgain')}
           </button>
           <button
             type="button"
             onClick={onExit}
             className="inline-flex min-h-12 cursor-pointer items-center justify-center rounded-xl px-6 text-sm font-semibold ring-1 ring-white/25 hover:bg-white/10"
           >
-            Back to module
+            {t('backToModule')}
           </button>
         </div>
       </div>
@@ -410,7 +482,7 @@ function Zone({ id, label, danger, active, onClick, className = '' }) {
       } ${active ? 'scale-[1.03]' : ''} ${className}`}
     >
       {danger ? <RiskIcon /> : <LockIcon />}
-      <span className="text-[11px] font-extrabold tracking-[0.14em] text-white uppercase drop-shadow-[0_2px_6px_rgba(0,0,0,0.65)] sm:text-sm md:text-lg">
+      <span className="text-[11px] font-extrabold tracking-[0.14em] text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.65)] sm:text-sm md:text-lg">
         {label}
       </span>
     </button>
@@ -448,4 +520,3 @@ function RiskIcon() {
     </svg>
   )
 }
-

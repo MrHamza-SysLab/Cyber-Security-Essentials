@@ -18,9 +18,12 @@ import marcus from '../../../assets/games/social-engineering-trap-detector/marcu
 import danielCallAudio from '../../../assets/games/social-engineering-trap-detector/daniel-it-call.mp3'
 import iphoneRingtone from '../../../assets/games/social-engineering-trap-detector/iphone-ringtone.mp3'
 import wrongChoiceAlarm from '../../../assets/games/social-engineering-trap-detector/wrong-choice-alarm.mp3'
+import { LangToggleGame } from '../../../components/LangToggle'
+import { useLanguage } from '../../../i18n/LanguageContext'
+import { SOCIAL_ENGINEERING_UR } from '../../../i18n/module1'
 import GameShell from '../shared/GameShell'
 
-const CHAT_THREADS = [
+const CHAT_THREADS_EN = [
   { name: 'Sarah Chen', time: '10:42 AM', preview: 'Thanks for the update on the quarterly report…' },
   { name: 'Daniel — IT Support', time: '10:38 AM', preview: 'URGENT: Your account will be locked in 15 minutes…', active: true },
   { name: 'HR Department', time: 'Yesterday', preview: 'Reminder: Please submit your timesheets by Friday.' },
@@ -28,7 +31,48 @@ const CHAT_THREADS = [
   { name: 'Finance Dept', time: 'Monday', preview: 'Invoice approval request — action required.' },
 ]
 
+const CALL_SCRIPT_EN = {
+  before: 'Hi, this is Daniel from IT Support. We\'re currently dealing with a security issue affecting several employee accounts. ',
+  highlight: 'I need your password immediately',
+  after: ' so I can verify your account before it is locked.',
+}
+
+const CHOICES_EN = [
+  {
+    id: 'give',
+    label: 'Give password',
+    correct: false,
+    feedbackTitle: 'Credentials Exposed',
+    feedback:
+      'Legitimate IT never asks for your password on a call or chat. Sharing it gives a possible impersonator full access to your account.',
+  },
+  {
+    id: 'verify',
+    label: 'Hang up & verify',
+    correct: true,
+    feedbackTitle: 'Correct Response',
+    feedback: 'You hung up and verified through a trusted channel — the safest way to handle an urgent IT request.',
+  },
+  {
+    id: 'ignore',
+    label: 'Ignore the message',
+    correct: false,
+    feedbackTitle: 'Threat Not Verified',
+    feedback:
+      'Ignoring the caller does not confirm whether the request was real. Hang up and call IT back using a number you already trust.',
+  },
+]
+
+const BLURRED_MESSAGES_EN = [
+  'Hi Sarah, this is Daniel from IT Support.',
+  'We detected unusual activity on your account. Please respond immediately.',
+]
+
 function IntroScreen({ onAnswer, onExit, score = 0 }) {
+  const { t, isUr } = useLanguage()
+  const ur = SOCIAL_ENGINEERING_UR
+  const chatThreads = isUr ? ur.chatThreads : CHAT_THREADS_EN
+  const blurredMessages = isUr ? ur.blurredMessages : BLURRED_MESSAGES_EN
   const ringtoneRef = useRef(null)
 
   useEffect(() => {
@@ -75,17 +119,22 @@ function IntroScreen({ onAnswer, onExit, score = 0 }) {
       <header className="flex min-h-12 shrink-0 items-center justify-between border-b border-cyan-400/15 bg-[#0d1520] px-4 sm:min-h-14 sm:px-6">
         <div className="flex items-center gap-2 text-sm text-slate-200 sm:text-base">
           <Shield className="size-4 text-cyan-400 sm:size-5" />
-          <span className="hidden sm:inline">Security Awareness Training</span>
-          <span className="sm:hidden">Training</span>
+          <span className="hidden sm:inline">
+            {isUr ? ur.securityAwarenessTraining : 'Security Awareness Training'}
+          </span>
+          <span className="sm:hidden">{isUr ? ur.training : 'Training'}</span>
         </div>
-        <p className="font-game text-sm tracking-[0.12em] text-white sm:text-base">SOCIAL ENGINEERING</p>
+        <p className="font-game text-sm tracking-[0.12em] text-white sm:text-base">
+          {isUr ? ur.socialEngineering : 'SOCIAL ENGINEERING'}
+        </p>
         <div className="flex items-center gap-3 font-mono text-xs sm:gap-5 sm:text-sm">
+          <LangToggleGame />
           <span className="font-semibold text-cyan-300">{score} PTS</span>
           <button
             type="button"
             onClick={onExit}
             className="ml-1 inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
-            aria-label="Exit"
+            aria-label={t('exit')}
           >
             <ArrowLeft className="size-4" />
           </button>
@@ -108,11 +157,11 @@ function IntroScreen({ onAnswer, onExit, score = 0 }) {
           <div className="flex min-h-0 min-w-0 flex-1">
             <div className="hidden w-[280px] shrink-0 flex-col border-r border-slate-700/50 bg-[#151c27] md:flex">
               <div className="border-b border-slate-700/50 px-4 py-3">
-                <p className="text-lg font-semibold text-white">Chat</p>
-                <p className="text-xs text-slate-400">Recent</p>
+                <p className="text-lg font-semibold text-white">{isUr ? ur.chat : 'Chat'}</p>
+                <p className="text-xs text-slate-400">{isUr ? ur.recent : 'Recent'}</p>
               </div>
               <div className="flex-1 overflow-y-auto">
-                {CHAT_THREADS.map((thread) => (
+                {chatThreads.map((thread) => (
                   <div
                     key={thread.name}
                     className={`border-b border-slate-700/30 px-4 py-3 ${
@@ -136,17 +185,21 @@ function IntroScreen({ onAnswer, onExit, score = 0 }) {
                 <div className="mb-4 flex items-center gap-3 border-b border-slate-700/40 pb-4">
                   <div className="size-10 rounded-full bg-slate-600" />
                   <div>
-                    <p className="font-medium text-slate-200">Daniel — IT Support</p>
-                    <p className="text-xs text-slate-500">Last seen just now</p>
+                    <p className="font-medium text-slate-200">{isUr ? ur.itSupport : 'Daniel — IT Support'}</p>
+                    <p className="text-xs text-slate-500">
+                      {isUr ? ur.lastSeenJustNow : 'Last seen just now'}
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <div className="max-w-md rounded-2xl bg-slate-700/50 px-4 py-3 text-sm text-slate-300">
-                    Hi Sarah, this is Daniel from IT Support.
-                  </div>
-                  <div className="max-w-md rounded-2xl bg-slate-700/50 px-4 py-3 text-sm text-slate-300">
-                    We detected unusual activity on your account. Please respond immediately.
-                  </div>
+                  {blurredMessages.map((msg) => (
+                    <div
+                      key={msg}
+                      className="max-w-md rounded-2xl bg-slate-700/50 px-4 py-3 text-sm text-slate-300"
+                    >
+                      {msg}
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -154,32 +207,40 @@ function IntroScreen({ onAnswer, onExit, score = 0 }) {
                 <div className="game-pop relative w-full max-w-md overflow-hidden rounded-2xl border border-cyan-400/40 bg-[#1c2430]/95 p-6 shadow-[0_0_50px_rgba(34,211,238,0.22)] sm:p-8">
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_55%)]" />
                   <span className="absolute right-4 top-4 rounded-full bg-cyan-500/20 px-3 py-1 text-[10px] font-semibold tracking-wider text-cyan-300 ring-1 ring-cyan-400/40">
-                    URGENT REQUEST
+                    {isUr ? ur.urgentRequest : 'URGENT REQUEST'}
                   </span>
 
                   <div className="relative pt-6 text-center">
-                    <h2 className="font-game text-3xl tracking-wide text-white sm:text-4xl">INCOMING CALL</h2>
-                    <p className="mt-1 text-sm font-semibold tracking-[0.22em] text-cyan-300 sm:text-base">IT SUPPORT</p>
+                    <h2 className="font-game text-3xl tracking-wide text-white sm:text-4xl">
+                      {isUr ? ur.incomingCall : 'INCOMING CALL'}
+                    </h2>
+                    <p className="mt-1 text-sm font-semibold tracking-[0.22em] text-cyan-300 sm:text-base">
+                      {isUr ? ur.itSupport : 'IT SUPPORT'}
+                    </p>
 
                     <div className="mx-auto mt-6 size-28 overflow-hidden rounded-full ring-2 ring-cyan-400/50 sm:size-32">
                       <img src={marcus} alt="" className="size-full object-cover object-top" />
                     </div>
 
-                    <p className="mt-5 text-xl font-semibold text-white sm:text-2xl">Daniel — IT Support</p>
+                    <p className="mt-5 text-xl font-semibold text-white sm:text-2xl">
+                      {isUr ? ur.itSupport : 'Daniel — IT Support'}
+                    </p>
                     <p className="mt-2 text-sm text-slate-300">
-                      Calling
+                      {isUr ? ur.calling : 'Calling'}
                       <span className="inline-flex w-6 justify-start">
                         <span className="animate-pulse">...</span>
                       </span>
                     </p>
-                    <p className="mt-1 text-xs text-slate-400 sm:text-sm">IT Support Department</p>
+                    <p className="mt-1 text-xs text-slate-400 sm:text-sm">
+                      {isUr ? ur.itSupportDepartment : 'IT Support Department'}
+                    </p>
 
                     <button
                       type="button"
                       onClick={handleAnswer}
                       className="mt-7 w-full min-h-12 cursor-pointer rounded-xl border border-cyan-400/60 bg-slate-950/80 px-6 font-game text-sm tracking-[0.14em] text-cyan-200 shadow-[inset_0_0_20px_rgba(34,211,238,0.15),0_0_28px_rgba(34,211,238,0.35)] transition hover:border-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-100 sm:text-base"
                     >
-                      [ ANSWER CALL ]
+                      {isUr ? ur.answerCall : '[ ANSWER CALL ]'}
                     </button>
                   </div>
                 </div>
@@ -191,38 +252,6 @@ function IntroScreen({ onAnswer, onExit, score = 0 }) {
     </div>
   )
 }
-
-const CALL_SCRIPT = {
-  before: 'Hi, this is Daniel from IT Support. We\'re currently dealing with a security issue affecting several employee accounts. ',
-  highlight: 'I need your password immediately',
-  after: ' so I can verify your account before it is locked.',
-}
-
-const CHOICES = [
-  {
-    id: 'give',
-    label: 'Give password',
-    correct: false,
-    feedbackTitle: 'Credentials Exposed',
-    feedback:
-      'Legitimate IT never asks for your password on a call or chat. Sharing it gives a possible impersonator full access to your account.',
-  },
-  {
-    id: 'verify',
-    label: 'Hang up & verify',
-    correct: true,
-    feedbackTitle: 'Correct Response',
-    feedback: 'You hung up and verified through a trusted channel — the safest way to handle an urgent IT request.',
-  },
-  {
-    id: 'ignore',
-    label: 'Ignore the message',
-    correct: false,
-    feedbackTitle: 'Threat Not Verified',
-    feedback:
-      'Ignoring the caller does not confirm whether the request was real. Hang up and call IT back using a number you already trust.',
-  },
-]
 
 function playSirenBeep() {
   try {
@@ -249,6 +278,8 @@ function playSirenBeep() {
 }
 
 function WrongChoiceOverlay({ feedback, onTryAgain }) {
+  const { isUr } = useLanguage()
+  const ur = SOCIAL_ENGINEERING_UR
   const alarmRef = useRef(null)
 
   useEffect(() => {
@@ -277,11 +308,17 @@ function WrongChoiceOverlay({ feedback, onTryAgain }) {
           <div className="flex size-16 items-center justify-center rounded-full bg-rose-500/20 ring-2 ring-rose-400/60">
             <AlertTriangle className="size-8 animate-pulse text-rose-300" />
           </div>
-          <p className="mt-4 font-mono text-xs tracking-[0.32em] text-rose-300">SECURITY ALERT</p>
-          <h2 className="mt-2 font-game text-3xl text-white sm:text-4xl">WRONG DECISION</h2>
+          <p className="mt-4 font-mono text-xs tracking-[0.32em] text-rose-300">
+            {isUr ? ur.securityAlert : 'SECURITY ALERT'}
+          </p>
+          <h2 className="mt-2 font-game text-3xl text-white sm:text-4xl">
+            {isUr ? ur.wrongDecision : 'WRONG DECISION'}
+          </h2>
           <p className="mt-3 text-lg font-semibold text-cyan-200">{feedback.title}</p>
           <p className="mt-4 rounded-lg border border-rose-400/30 bg-rose-950/50 px-4 py-3 text-left text-sm leading-relaxed text-rose-100 sm:text-base">
-            <span className="font-semibold text-rose-200">Why this is wrong:</span>{' '}
+            <span className="font-semibold text-rose-200">
+              {isUr ? ur.whyWrong : 'Why this is wrong:'}
+            </span>{' '}
             {feedback.reason}
           </p>
           <button
@@ -290,7 +327,7 @@ function WrongChoiceOverlay({ feedback, onTryAgain }) {
             className="mt-7 inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-xl bg-cyan-400 px-8 font-game text-sm tracking-wider text-slate-950 transition hover:bg-cyan-300 sm:text-base"
           >
             <RotateCcw className="size-4" />
-            TRY AGAIN
+            {isUr ? ur.tryAgain : 'TRY AGAIN'}
           </button>
         </div>
       </div>
@@ -333,6 +370,17 @@ function PlayScreen({
   onExit,
   onCallEnded,
 }) {
+  const { t, isUr } = useLanguage()
+  const ur = SOCIAL_ENGINEERING_UR
+  const callScript = isUr ? ur.callScript : CALL_SCRIPT_EN
+  const choices = isUr
+    ? CHOICES_EN.map((opt) => {
+        const copy = ur.choices[opt.id]
+        return copy
+          ? { ...opt, label: copy.label, feedbackTitle: copy.feedbackTitle, feedback: copy.feedback }
+          : opt
+      })
+    : CHOICES_EN
   const [transcriptOn, setTranscriptOn] = useState(true)
   const audioRef = useRef(null)
 
@@ -384,10 +432,13 @@ function PlayScreen({
     <div className="fixed inset-0 z-50 flex flex-col bg-[#0a1018] text-white">
       <header className="flex min-h-12 shrink-0 items-center justify-between border-b border-cyan-400/15 bg-[#0d1520] px-4 sm:min-h-14 sm:px-6">
         <p className="font-game text-xs tracking-[0.12em] text-white sm:text-sm">
-          SOCIAL ENGINEERING
+          {isUr ? ur.socialEngineering : 'SOCIAL ENGINEERING'}
         </p>
         <div className="flex flex-wrap items-center justify-end gap-3 font-mono text-[10px] sm:gap-5 sm:text-xs">
-          <span className="text-slate-300">SCORE: <span className="text-white">{score}</span></span>
+          <LangToggleGame />
+          <span className="text-slate-300">
+            {t('score')}: <span className="text-white">{score}</span>
+          </span>
           <span className="text-slate-300">
             RISK LEVEL: <span className="font-semibold text-cyan-300">HIGH</span>
           </span>
@@ -395,7 +446,7 @@ function PlayScreen({
             type="button"
             onClick={onExit}
             className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
-            aria-label="Exit"
+            aria-label={t('exit')}
           >
             <ArrowLeft className="size-4" />
           </button>
@@ -408,7 +459,9 @@ function PlayScreen({
             <div className="size-36 overflow-hidden rounded-full ring-2 ring-cyan-400/40 sm:size-40">
               <img src={marcus} alt="" className="size-full object-cover object-top" />
             </div>
-            <p className="mt-4 text-2xl font-semibold text-white sm:text-3xl">Daniel — IT Support</p>
+            <p className="mt-4 text-2xl font-semibold text-white sm:text-3xl">
+              {isUr ? ur.itSupport : 'Daniel — IT Support'}
+            </p>
             <div className="mt-3 space-y-1 text-sm text-slate-300">
               <p><span className="text-slate-500">Name:</span> Daniel Morgan</p>
               <p><span className="text-slate-500">Department:</span> IT Support</p>
@@ -423,11 +476,11 @@ function PlayScreen({
                 <div className="flex-1 overflow-y-auto pr-1 text-base leading-relaxed sm:text-lg">
                   <p>
                     <span className="font-semibold">IT SUPPORT:</span>{' '}
-                    {CALL_SCRIPT.before}
+                    {callScript.before}
                     <span className="rounded bg-cyan-200/80 px-1 text-slate-900 shadow-[0_0_14px_rgba(34,211,238,0.45)]">
-                      {CALL_SCRIPT.highlight}
+                      {callScript.highlight}
                     </span>
-                    {CALL_SCRIPT.after}
+                    {callScript.after}
                   </p>
                 </div>
                 <p className="mt-6 border-t border-slate-400/35 pt-4 text-sm italic text-slate-600">
@@ -440,7 +493,7 @@ function PlayScreen({
 
         {choicesOpen && (
           <div className="mx-auto mt-4 grid w-full max-w-6xl gap-2 sm:grid-cols-3">
-            {CHOICES.map((option) => (
+            {choices.map((option) => (
               <button
                 key={option.id}
                 type="button"
@@ -506,6 +559,8 @@ function PlayScreen({
 }
 
 export default function SocialEngineeringGame({ onExit }) {
+  const { t, isUr } = useLanguage()
+  const ur = SOCIAL_ENGINEERING_UR
   const [phase, setPhase] = useState('intro')
   const [callEnded, setCallEnded] = useState(false)
   const [wrongFeedback, setWrongFeedback] = useState(null)
@@ -573,7 +628,7 @@ export default function SocialEngineeringGame({ onExit }) {
 
   return (
     <GameShell
-      title="SCENARIO 01 — Social Engineering"
+      title={isUr ? ur.socialEngineering : 'SCENARIO 01 — Social Engineering'}
       score={score}
       onExit={onExit}
     >
@@ -591,7 +646,7 @@ export default function SocialEngineeringGame({ onExit }) {
                 </ul>
               </div>
               <div className="rounded-2xl border border-cyan-300/30 bg-slate-900/70 p-4 text-center">
-                <p className="text-sm uppercase tracking-wide text-slate-300">Security Score</p>
+                <p className="text-sm uppercase tracking-wide text-slate-300">{t('score')}</p>
                 <p className={`mt-2 text-5xl font-bold ${scoreTone}`}>{score}</p>
                 <p className="text-slate-300">/ 100</p>
                 <p className="mt-3 text-sm text-slate-200">Decision Quality: <span className="text-cyan-300">{decisionQuality}</span></p>
@@ -615,7 +670,7 @@ export default function SocialEngineeringGame({ onExit }) {
                   }}
                   className="min-h-12 cursor-pointer rounded-xl bg-cyan-400 px-6 text-sm font-semibold text-slate-950 hover:bg-cyan-300"
                 >
-                  Retry Scenario
+                  {t('retry')}
                 </button>
               )}
               <button
@@ -623,7 +678,7 @@ export default function SocialEngineeringGame({ onExit }) {
                 onClick={onExit}
                 className="min-h-12 cursor-pointer rounded-xl bg-white/10 px-6 text-sm font-semibold text-white ring-1 ring-white/25 hover:bg-white/20"
               >
-                Back to module
+                {t('backToModule')}
               </button>
             </div>
           </div>

@@ -16,12 +16,15 @@ import custNgo from '../../../assets/general/cust-ngo.png'
 import custPep from '../../../assets/general/cust-pep.png'
 import custStudent from '../../../assets/general/cust-student.png'
 import custTrader from '../../../assets/general/cust-trader.png'
+import { LangToggleGame } from '../../../components/LangToggle'
+import { useLanguage } from '../../../i18n/LanguageContext'
+import { HUMAN_FIREWALL_UR } from '../../../i18n/module1'
 import { usePointerDrag } from '../shared/usePointerDrag'
 
 const MAX_LIVES = 3
 const TARGET_BRICKS = 3
 
-const LAYERS = [
+const LAYERS_BASE = [
   {
     id: 0,
     code: 'L1',
@@ -74,7 +77,7 @@ const LAYER_STYLES = {
   },
 }
 
-const BRICKS = [
+const BRICKS_BASE = [
   {
     id: 'ngo',
     role: 'Charity Director',
@@ -170,7 +173,7 @@ function BrickShell({ children, className = '', glow = false, ...props }) {
   )
 }
 
-function LayerBadge({ layerId, compact = false }) {
+function LayerBadge({ layerId, compact = false, layers, riskLabel = 'RISK' }) {
   if (layerId == null) {
     return (
       <span
@@ -178,11 +181,11 @@ function LayerBadge({ layerId, compact = false }) {
           compact ? 'h-5 px-1.5 text-[9px]' : 'h-6 px-2 text-[10px]'
         }`}
       >
-        RISK
+        {riskLabel}
       </span>
     )
   }
-  const layer = LAYERS[layerId]
+  const layer = layers[layerId]
   const style = LAYER_STYLES[layer.color]
   return (
     <span
@@ -243,7 +246,11 @@ function AvatarBrickCard({ item, dimmed = false, compact = false }) {
   )
 }
 
-function HintGuideModal({ onClose }) {
+function HintGuideModal({ onClose, layers, bricks }) {
+  const { isUr } = useLanguage()
+  const ur = HUMAN_FIREWALL_UR
+  const trader = bricks.find((b) => b.id === 'trader')
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
       <div className="game-pop relative max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-cyan-500/30 bg-[#020617] p-5 shadow-[0_0_40px_rgba(34,211,238,0.2)] sm:p-6">
@@ -256,14 +263,22 @@ function HintGuideModal({ onClose }) {
           <X className="size-5" />
         </button>
 
-        <p className="font-game text-sm font-bold tracking-[0.14em] text-cyan-300">LAYER GUIDE</p>
+        <p className="font-game text-sm font-bold tracking-[0.14em] text-cyan-300">
+          {isUr ? ur.layerGuide : 'LAYER GUIDE'}
+        </p>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-300">
-          Har safe brick ek wall layer seal karti hai. Matching badge (L1 / L2 / L3) wale slot pe drop
-          karo. <span className="text-rose-300">RISK</span> brick kisi layer pe nahi lagti.
+          {isUr ? (
+            ur.layerGuideBody
+          ) : (
+            <>
+              Har safe brick ek wall layer seal karti hai. Matching badge (L1 / L2 / L3) wale slot pe drop
+              karo. <span className="text-rose-300">RISK</span> brick kisi layer pe nahi lagti.
+            </>
+          )}
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {LAYERS.map((layer) => {
+          {layers.map((layer) => {
             const style = LAYER_STYLES[layer.color]
             const Icon = layer.Icon
             return (
@@ -271,13 +286,15 @@ function HintGuideModal({ onClose }) {
                 key={layer.id}
                 className="flex items-center gap-2 rounded-lg border border-white/10 bg-slate-950/70 px-2.5 py-1.5"
               >
-                <LayerBadge layerId={layer.id} compact />
+                <LayerBadge layerId={layer.id} compact layers={layers} />
                 <Icon className={`size-3.5 ${style.text}`} />
                 <div className="text-left">
                   <p className={`font-mono text-[9px] font-bold tracking-wider ${style.text}`}>
                     {layer.title}
                   </p>
-                  <p className="text-[9px] text-slate-400">Needs: {layer.needs}</p>
+                  <p className="text-[9px] text-slate-400">
+                    {isUr ? ur.needs : 'Needs:'} {layer.needs}
+                  </p>
                 </div>
               </div>
             )
@@ -285,9 +302,11 @@ function HintGuideModal({ onClose }) {
         </div>
 
         <div className="mt-5 space-y-3">
-          <p className="font-mono text-[10px] tracking-[0.2em] text-slate-500">LAYER MAP</p>
-          {LAYERS.map((layer) => {
-            const brick = BRICKS.find((b) => b.layer === layer.id)
+          <p className="font-mono text-[10px] tracking-[0.2em] text-slate-500">
+            {isUr ? ur.layerMap : 'LAYER MAP'}
+          </p>
+          {layers.map((layer) => {
+            const brick = bricks.find((b) => b.layer === layer.id)
             const style = LAYER_STYLES[layer.color]
             const Icon = layer.Icon
             return (
@@ -295,7 +314,7 @@ function HintGuideModal({ onClose }) {
                 key={layer.id}
                 className="flex items-center gap-3 rounded-xl border border-cyan-500/20 bg-slate-900/60 p-3"
               >
-                <LayerBadge layerId={layer.id} />
+                <LayerBadge layerId={layer.id} layers={layers} />
                 <Icon className={`size-5 shrink-0 ${style.text}`} />
                 <img
                   src={brick.avatar}
@@ -309,14 +328,16 @@ function HintGuideModal({ onClose }) {
                   <p className="text-xs text-slate-200">
                     {brick.role} — {brick.label}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-slate-400">Needs: {layer.needs}</p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">
+                    {isUr ? ur.needs : 'Needs:'} {layer.needs}
+                  </p>
                 </div>
               </div>
             )
           })}
 
           <div className="flex items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-950/30 p-3">
-            <LayerBadge layerId={null} />
+            <LayerBadge layerId={null} layers={layers} riskLabel={isUr ? ur.risk : 'RISK'} />
             <AlertTriangle className="size-5 shrink-0 text-rose-300" />
             <img
               src={custTrader}
@@ -324,8 +345,12 @@ function HintGuideModal({ onClose }) {
               className="h-14 w-14 shrink-0 rounded-lg object-cover object-top ring-1 ring-rose-400/30"
             />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-rose-300">RISK · Cash Trader</p>
-              <p className="text-xs text-rose-100/90">Shared Password on Chat — fits no wall layer</p>
+              <p className="text-sm font-semibold text-rose-300">
+                {isUr ? ur.risk : 'RISK'} · {trader?.role}
+              </p>
+              <p className="text-xs text-rose-100/90">
+                {trader?.label} — {trader?.hint}
+              </p>
             </div>
           </div>
         </div>
@@ -342,9 +367,11 @@ function HintGuideModal({ onClose }) {
   )
 }
 
-function FirewallResultScreen({ passed, score, secured, lives, slots, onRetry, onExit }) {
+function FirewallResultScreen({ passed, score, secured, lives, slots, layers, bricks, onRetry, onExit }) {
+  const { t, isUr } = useLanguage()
+  const ur = HUMAN_FIREWALL_UR
   const sealed = slots
-    .map((id) => (id ? BRICKS.find((b) => b.id === id) : null))
+    .map((id) => (id ? bricks.find((b) => b.id === id) : null))
     .filter(Boolean)
 
   return (
@@ -370,7 +397,7 @@ function FirewallResultScreen({ passed, score, secured, lives, slots, onRetry, o
             >
               {passed ? <ShieldCheck className="size-10" /> : <ShieldAlert className="size-10" />}
             </div>
-            <p className="font-mono text-[11px] tracking-[0.22em] text-slate-400">MISSION DEBRIEF</p>
+            <p className="font-mono text-[11px] tracking-[0.22em] text-slate-400">{t('debrief')}</p>
             <h2
               className={`mt-2 font-game text-2xl font-bold tracking-wide sm:text-3xl ${
                 passed ? 'text-emerald-300' : 'text-rose-300'
@@ -388,17 +415,21 @@ function FirewallResultScreen({ passed, score, secured, lives, slots, onRetry, o
           <div className="space-y-4 px-6 pb-6 sm:px-8 sm:pb-8">
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <div className="rounded-xl border border-cyan-500/20 bg-slate-900/70 p-3 text-center">
-                <p className="font-mono text-[9px] tracking-wider text-slate-500">SCORE</p>
+                <p className="font-mono text-[9px] tracking-wider text-slate-500">{t('score')}</p>
                 <p className="mt-1 font-game text-xl font-bold text-cyan-300">{score}</p>
               </div>
               <div className="rounded-xl border border-cyan-500/20 bg-slate-900/70 p-3 text-center">
-                <p className="font-mono text-[9px] tracking-wider text-slate-500">BRICKS</p>
+                <p className="font-mono text-[9px] tracking-wider text-slate-500">
+                  {isUr ? ur.bricks : 'BRICKS'}
+                </p>
                 <p className="mt-1 font-game text-xl font-bold text-cyan-300">
                   {secured}/{TARGET_BRICKS}
                 </p>
               </div>
               <div className="rounded-xl border border-cyan-500/20 bg-slate-900/70 p-3 text-center">
-                <p className="font-mono text-[9px] tracking-wider text-slate-500">LIVES</p>
+                <p className="font-mono text-[9px] tracking-wider text-slate-500">
+                  {isUr ? ur.lives : 'LIVES'}
+                </p>
                 <div className="mt-1.5 flex items-center justify-center gap-1">
                   {Array.from({ length: MAX_LIVES }).map((_, i) => (
                     <Shield
@@ -419,7 +450,7 @@ function FirewallResultScreen({ passed, score, secured, lives, slots, onRetry, o
                 {passed ? 'LAYERS SEALED' : 'PROGRESS'}
               </p>
               <ul className="mt-3 space-y-2">
-                {LAYERS.map((layer) => {
+                {layers.map((layer) => {
                   const brick = sealed.find((b) => b.layer === layer.id)
                   const style = LAYER_STYLES[layer.color]
                   const Icon = layer.Icon
@@ -485,7 +516,7 @@ function FirewallResultScreen({ passed, score, secured, lives, slots, onRetry, o
                   onClick={onRetry}
                   className="flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-xl bg-cyan-400 font-game text-sm font-bold tracking-wider text-slate-950 hover:bg-cyan-300"
                 >
-                  RETRY MISSION
+                  {t('retry')}
                 </button>
               )}
               {passed && (
@@ -494,7 +525,7 @@ function FirewallResultScreen({ passed, score, secured, lives, slots, onRetry, o
                   onClick={onRetry}
                   className="flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-xl border border-cyan-400/40 font-game text-sm font-bold tracking-wider text-cyan-300 hover:bg-cyan-400/10"
                 >
-                  PLAY AGAIN
+                  {t('playAgain')}
                 </button>
               )}
               <button
@@ -506,7 +537,7 @@ function FirewallResultScreen({ passed, score, secured, lives, slots, onRetry, o
                     : 'border border-white/20 text-slate-200 hover:bg-white/5'
                 }`}
               >
-                BACK TO MODULE
+                {t('backToModule')}
               </button>
             </div>
           </div>
@@ -517,6 +548,39 @@ function FirewallResultScreen({ passed, score, secured, lives, slots, onRetry, o
 }
 
 export default function HumanFirewallGame({ onExit }) {
+  const { t, isUr } = useLanguage()
+  const ur = HUMAN_FIREWALL_UR
+
+  const layers = useMemo(
+    () =>
+      LAYERS_BASE.map((layer) => {
+        const copy = ur.layers[layer.id]
+        return {
+          ...layer,
+          ordinal: isUr && copy ? copy.ordinal : layer.ordinal,
+          title: isUr && copy ? copy.title : layer.title,
+          needs: isUr && copy ? copy.needs : layer.needs,
+        }
+      }),
+    [isUr, ur],
+  )
+
+  const bricks = useMemo(
+    () =>
+      BRICKS_BASE.map((brick) => {
+        const copy = ur.bricksCopy[brick.id]
+        return {
+          ...brick,
+          role: isUr && copy ? copy.role : brick.role,
+          label: isUr && copy ? copy.label : brick.label,
+          hint: isUr && copy ? copy.hint : brick.hint,
+        }
+      }),
+    [isUr, ur],
+  )
+
+  const wallLabel = (text) => (isUr && ur.wallLabels[text] ? ur.wallLabels[text] : text)
+
   const [phase, setPhase] = useState('play')
   const [slots, setSlots] = useState([null, null, null])
   const [used, setUsed] = useState({})
@@ -545,13 +609,13 @@ export default function HumanFirewallGame({ onExit }) {
   const { drag, start } = usePointerDrag(({ payload, zoneId }) => {
     if (gameOver || complete || showHint) return
     if (!zoneId?.startsWith('slot-') || !payload?.id) return
-    const brickItem = BRICKS.find((item) => item.id === payload.id)
+    const brickItem = bricks.find((item) => item.id === payload.id)
     if (!brickItem || used[brickItem.id]) return
 
     const index = Number(zoneId.replace('slot-', ''))
     if (Number.isNaN(index) || slots[index]) return
 
-    const targetLayer = LAYERS[index]
+    const targetLayer = layers[index]
 
     if (!brickItem.good || brickItem.layer == null) {
       showWrong(
@@ -562,7 +626,7 @@ export default function HumanFirewallGame({ onExit }) {
     }
 
     if (brickItem.layer !== index) {
-      const correctLayer = LAYERS[brickItem.layer]
+      const correctLayer = layers[brickItem.layer]
       showWrong(
         'Wrong layer',
         `${brickItem.role} belongs to ${correctLayer.ordinal} (${correctLayer.title}). You dropped on ${targetLayer.ordinal} (${targetLayer.title}). Match the same layer.`,
@@ -582,8 +646,8 @@ export default function HumanFirewallGame({ onExit }) {
     window.setTimeout(() => setFeedback(null), 2800)
   })
 
-  const dragging = useMemo(() => BRICKS.find((item) => item.id === drag?.id), [drag?.id])
-  const trayBricks = BRICKS.filter((item) => !used[item.id])
+  const dragging = useMemo(() => bricks.find((item) => item.id === drag?.id), [drag?.id, bricks])
+  const trayBricks = bricks.filter((item) => !used[item.id])
   const activeLayer = dragging?.layer
 
   function resetGame() {
@@ -605,6 +669,8 @@ export default function HumanFirewallGame({ onExit }) {
         secured={secured}
         lives={lives}
         slots={slots}
+        layers={layers}
+        bricks={bricks}
         onRetry={resetGame}
         onExit={onExit}
       />
@@ -625,7 +691,7 @@ export default function HumanFirewallGame({ onExit }) {
             className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg px-2 text-xs text-slate-300 transition hover:bg-cyan-400/10 hover:text-cyan-200"
           >
             <ArrowLeft className="size-4" />
-            <span className="hidden sm:inline">Exit</span>
+            <span className="hidden sm:inline">{t('exit')}</span>
           </button>
           <div className="flex items-center gap-2">
             <div className="relative flex size-9 items-center justify-center rounded-lg bg-cyan-500/15 ring-1 ring-cyan-400/50">
@@ -633,12 +699,13 @@ export default function HumanFirewallGame({ onExit }) {
               <Lock className="absolute size-2.5 text-cyan-50" />
             </div>
             <h1 className="font-game text-xs font-bold tracking-[0.14em] text-white sm:text-sm md:text-base">
-              SECURE THE NETWORK
+              {isUr ? ur.secureTheNetwork : 'SECURE THE NETWORK'}
             </h1>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+          <LangToggleGame />
           <button
             type="button"
             onClick={() => setShowHint(true)}
@@ -652,10 +719,12 @@ export default function HumanFirewallGame({ onExit }) {
             LEVEL 01
           </span>
           <span className="rounded-lg bg-slate-900/90 px-3 py-1.5 font-mono text-[10px] text-cyan-200 ring-1 ring-cyan-500/20 sm:text-xs">
-            SCORE: {score}
+            {t('score')}: {score}
           </span>
           <div className="flex items-center gap-1.5 rounded-lg bg-slate-900/90 px-2.5 py-1.5 ring-1 ring-cyan-500/20">
-            <span className="font-mono text-[10px] text-slate-400 sm:text-xs">LIVES:</span>
+            <span className="font-mono text-[10px] text-slate-400 sm:text-xs">
+              {isUr ? ur.lives : 'LIVES'}:
+            </span>
             {Array.from({ length: MAX_LIVES }).map((_, i) => (
               <Shield
                 key={i}
@@ -664,7 +733,7 @@ export default function HumanFirewallGame({ onExit }) {
             ))}
           </div>
           <span className="rounded-lg bg-slate-900/90 px-3 py-1.5 font-mono text-[10px] text-cyan-200 ring-1 ring-cyan-500/20 sm:text-xs">
-            {secured}/{TARGET_BRICKS} BRICKS
+            {secured}/{TARGET_BRICKS} {isUr ? ur.bricks : 'BRICKS'}
           </span>
         </div>
       </header>
@@ -724,7 +793,7 @@ export default function HumanFirewallGame({ onExit }) {
               >
                 {row.map((cell, cellIndex) => {
                   if (cell.type === 'layer') {
-                    const layer = LAYERS[cell.layer]
+                    const layer = layers[cell.layer]
                     const style = LAYER_STYLES[layer.color]
                     const Icon = layer.Icon
                     return (
@@ -741,10 +810,10 @@ export default function HumanFirewallGame({ onExit }) {
                   }
 
                   if (cell.type === 'slot') {
-                    const layer = LAYERS[cell.slot]
+                    const layer = layers[cell.slot]
                     const style = LAYER_STYLES[layer.color]
                     const filledId = slots[cell.slot]
-                    const filled = filledId ? BRICKS.find((b) => b.id === filledId) : null
+                    const filled = filledId ? bricks.find((b) => b.id === filledId) : null
                     const isMatchTarget = activeLayer === cell.slot && !filled
                     return (
                       <BrickShell
@@ -791,7 +860,7 @@ export default function HumanFirewallGame({ onExit }) {
                   if (cell.type === 'label') {
                     return (
                       <BrickShell key={`${rowIndex}-${cellIndex}`} className="text-cyan-100/90">
-                        <span className="line-clamp-2 leading-tight">{cell.text}</span>
+                        <span className="line-clamp-2 leading-tight">{wallLabel(cell.text)}</span>
                       </BrickShell>
                     )
                   }
@@ -814,14 +883,20 @@ export default function HumanFirewallGame({ onExit }) {
 
         <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-72 xl:w-80">
           <div className="rounded-2xl border border-cyan-500/25 bg-slate-950/75 p-4 backdrop-blur">
-            <p className="font-game text-sm font-bold tracking-[0.12em] text-cyan-300">SECURE THE WALL</p>
+            <p className="font-game text-sm font-bold tracking-[0.12em] text-cyan-300">
+              {isUr ? ur.secureTheNetwork : 'SECURE THE WALL'}
+            </p>
             <p className="mt-2 text-sm leading-relaxed text-slate-300">
-              Har brick sirf apni layer pe lagti hai — L1 Email Defense, L2 Access Control, L3 Verify
-              First. RISK brick kisi pe nahi.
+              {isUr ? ur.layerGuideBody : (
+                <>
+                  Har brick sirf apni layer pe lagti hai — L1 Email Defense, L2 Access Control, L3 Verify
+                  First. RISK brick kisi pe nahi.
+                </>
+              )}
             </p>
             <div className="mt-4">
               <div className="mb-1.5 flex items-center justify-between font-mono text-[11px] text-slate-400">
-                <span>Bricks Secured</span>
+                <span>{isUr ? ur.bricks : 'Bricks Secured'}</span>
                 <span className="text-cyan-300">
                   {secured}/{TARGET_BRICKS}
                 </span>
@@ -869,7 +944,7 @@ export default function HumanFirewallGame({ onExit }) {
           <div className="hidden flex-1 rounded-2xl border border-dashed border-cyan-500/15 bg-slate-950/40 p-4 lg:block">
             <p className="font-mono text-[10px] tracking-[0.2em] text-slate-600">ROLE GUIDE</p>
             <ul className="mt-2 space-y-2 text-xs text-slate-500">
-              {BRICKS.map((b) => (
+              {bricks.map((b) => (
                 <li key={b.id} className="flex items-center gap-2">
                   <img
                     src={b.avatar}
@@ -927,7 +1002,9 @@ export default function HumanFirewallGame({ onExit }) {
         </div>
       )}
 
-      {showHint && <HintGuideModal onClose={() => setShowHint(false)} />}
+      {showHint && (
+        <HintGuideModal onClose={() => setShowHint(false)} layers={layers} bricks={bricks} />
+      )}
     </div>
   )
 }
